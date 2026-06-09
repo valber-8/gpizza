@@ -26,5 +26,42 @@ const OffersService = {
     else if (offer.type === 'fixed') discount = Math.min(offer.value, subtotal);
 
     return { offer, discount, final_total: subtotal - discount };
+  },
+
+  getAllOffers() {
+    const sheet = Utils.getSheet('offers');
+    const data  = sheet.getDataRange().getValues();
+    if (data.length < 2) return [];
+    const headers = data[0];
+    return data.slice(1).map((row, i) => {
+      const obj = {};
+      headers.forEach((h, j) => { obj[h] = row[j]; });
+      obj._row = i + 2;
+      return obj;
+    });
+  },
+
+  addOffer(data) {
+    const sheet   = Utils.getSheet('offers');
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const row = headers.map(h => data[h] !== undefined ? data[h] : '');
+    sheet.appendRow(row);
+    return { ok: true };
+  },
+
+  updateOffer(rowNum, data) {
+    const sheet   = Utils.getSheet('offers');
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    headers.forEach((h, i) => {
+      if (data[h] !== undefined) {
+        sheet.getRange(rowNum, i + 1).setValue(data[h]);
+      }
+    });
+    return { ok: true };
+  },
+
+  deleteOffer(rowNum) {
+    Utils.getSheet('offers').deleteRow(rowNum);
+    return { ok: true };
   }
 };

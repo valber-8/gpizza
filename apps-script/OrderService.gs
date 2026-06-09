@@ -123,5 +123,17 @@ const OrderService = {
       }
     }
     throw new Error('Order not found');
+  },
+
+  getActive() {
+    const TERMINAL = ['completed', 'cancelled'];
+    return Utils.sheetToObjects(Utils.getSheet('Orders'))
+      .filter(o => !TERMINAL.includes(o.status))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  },
+
+  getAll() {
+    return Utils.sheetToObjects(Utils.getSheet('Orders'))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
 };

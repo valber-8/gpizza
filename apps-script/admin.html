@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPizza Admin</title>
+<style>
+:root {
+  --red:#C62828; --sidebar:#1E1E28; --bg:#F5F5F7; --white:#fff;
+  --text:#212121; --muted:#757575; --border:#E0E0E0;
+  --green:#2E7D32; --orange:#FF9800; --blue:#1A66DB; --purple:#7B40CC;
+  --surface:#F0F0F2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+/* SIDEBAR */
+.sb{width:240px;min-width:240px;background:var(--sidebar);display:flex;flex-direction:column}
+.sb-logo{padding:24px 24px 4px;font-size:20px;font-weight:800;color:#fff}
+.sb-sub{padding:0 24px 16px;font-size:12px;color:rgba(255,255,255,.4)}
+.sb-div{height:1px;background:rgba(255,255,255,.1);margin:0 24px 8px}
+.nav{flex:1;padding:0 12px}
+.ni{display:flex;align-items:center;gap:12px;padding:0 14px;height:44px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;transition:.15s;margin-bottom:4px}
+.ni:hover{background:rgba(255,255,255,.06)}
+.ni.active{background:var(--red);color:#fff;font-weight:600}
+.ni .badge{margin-left:auto;background:var(--orange);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sb-status{margin:12px;padding:14px 16px;background:rgba(255,255,255,.06);border-radius:12px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.tog{width:44px;height:24px;border-radius:12px;position:relative;transition:.2s;flex-shrink:0}
+.tog::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;transition:.2s}
+.tog.on{background:var(--green)}.tog.on::after{left:23px}
+.tog.off{background:#555}.tog.off::after{left:3px}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:64px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}
+.topbar h1{font-size:20px;font-weight:700;flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:0 18px;height:38px;border-radius:19px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;transition:.15s}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--red);color:#fff}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-outline{background:rgba(26,102,219,.08);color:var(--blue);border:1px solid rgba(26,102,219,.3)}
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+.screen{display:none}.screen.active{display:block}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.sc{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);display:flex}
+.sc-acc{width:4px;flex-shrink:0}
+.sc-body{padding:16px 20px}
+.sc-val{font-size:26px;font-weight:800}
+.sc-lbl{font-size:12px;color:var(--muted);margin-top:6px}
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kc-hdr{padding:10px 14px;border-radius:10px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.kc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.kc-cnt{margin-left:auto;width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.oc{background:#fff;border-radius:12px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.07);overflow:hidden}
+.oc-stripe{height:4px}
+.oc-body{padding:12px}
+.oc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.adv-btn{height:30px;padding:0 12px;border-radius:15px;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+/* TABLE */
+.tbl-card{background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.05);overflow:hidden}
+.tbl-bar{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.si{height:36px;padding:0 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--surface);outline:none;min-width:220px}
+.si:focus{border-color:var(--red)}
+.fb{height:32px;padding:0 14px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;font-family:inherit;transition:.15s}
+.fb.active{background:var(--red);color:#fff;border-color:var(--red)}
+table{width:100%;border-collapse:collapse}
+th{padding:11px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--muted);background:#F2F2F4;border-bottom:1px solid var(--border)}
+td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:11px;font-size:11px;font-weight:600}
+.tog-sm{width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;border:none;outline:none;transition:.2s}
+.tog-sm::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;transition:.2s}
+.tog-sm.on{background:var(--green)}.tog-sm.on::after{left:21px}
+.tog-sm.off{background:#ccc}.tog-sm.off::after{left:3px}
+.axb{display:flex;gap:6px}
+.bx{height:28px;padding:0 12px;border-radius:6px;border:1px solid;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.bx-e{background:rgba(26,102,219,.1);color:var(--blue);border-color:rgba(26,102,219,.3)}
+.bx-d{background:rgba(198,40,40,.08);color:var(--red);border-color:rgba(198,40,40,.25)}
+.bx-a{background:rgba(46,125,50,.1);color:var(--green);border-color:rgba(46,125,50,.3)}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:100;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mc{background:#fff;border-radius:20px;padding:32px;min-width:520px;max-width:620px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mc h2{font-size:20px;font-weight:700;margin-bottom:22px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg.f1{grid-template-columns:1fr}
+.fi{display:flex;flex-direction:column;gap:5px}
+.fi label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.fi input,.fi select,.fi textarea{height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:var(--surface);outline:none;transition:.15s}
+.fi textarea{height:72px;padding:10px 14px;resize:vertical}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--red)}
+.ma{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+/* SETTINGS */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.scard{background:#fff;border-radius:14px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.scard h3{font-size:15px;font-weight:700;margin-bottom:18px}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.sr:last-of-type{border-bottom:none}
+.sl{font-size:14px;font-weight:500}
+.sh{font-size:11px;color:var(--muted)}
+.sinp{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--surface);outline:none;text-align:right;min-width:130px}
+.sinp:focus{border-color:var(--red)}
+.map-frame{width:100%;height:280px;border-radius:12px;border:1px solid var(--border);background:#e8f0e4}
+/* SETUP */
+.setup{position:fixed;inset:0;background:var(--sidebar);display:flex;align-items:center;justify-content:center;z-index:200}
+.su-card{background:#fff;border-radius:20px;padding:40px;width:380px;text-align:center}
+.su-card h1{font-size:26px;font-weight:800;margin-bottom:6px}
+.su-card p{color:var(--muted);font-size:14px;margin-bottom:24px}
+.su-card input{width:100%;height:48px;padding:0 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px}
+.su-card input:focus{border-color:var(--red)}
+.su-card button{width:100%;height:48px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}
+.spin{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{padding:40px;text-align:center;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="setup" id="su">
+  <div class="su-card">
+    <div style="font-size:48px;margin-bottom:10px">🍕</div>
+    <h1>GPizza Admin</h1>
+    <p>Enter your Staff API Key to continue</p>
+    <input type="password" id="suKey" placeholder="••••••••••••" />
+    <button onclick="doSetup()">Sign In</button>
+    <p style="margin-top:10px;font-size:11px;color:#bbb">Key stored locally in your browser</p>
+  </div>
+</div>
+
+<div class="sb">
+  <div class="sb-logo">🍕 GPizza</div>
+  <div class="sb-sub">Admin Panel</div>
+  <div class="sb-div"></div>
+  <nav class="nav">
+    <div class="ni active" onclick="go('orders')" data-p="orders"><span>📋</span>Live Orders<span class="badge" id="nbadge" style="display:none">0</span></div>
+    <div class="ni" onclick="go('history')" data-p="history"><span>📖</span>Order History</div>
+    <div class="ni" onclick="go('menu')" data-p="menu"><span>🍕</span>Menu</div>
+    <div class="ni" onclick="go('offers')" data-p="offers"><span>🎁</span>Offers</div>
+    <div class="ni" onclick="go('reviews')" data-p="reviews"><span>⭐</span>Reviews</div>
+    <div class="ni" onclick="go('settings')" data-p="settings"><span>⚙️</span>Settings</div>
+  </nav>
+  <div class="sb-status" onclick="toggleOpen()">
+    <span id="openLbl">🟢 Restaurant Open</span>
+    <div class="tog on" id="openTog"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1 id="pgTitle">Live Orders</h1>
+    <span style="font-size:13px;color:var(--muted)" id="pgDate"></span>
+    <button class="btn btn-secondary" onclick="refresh()">↻ Refresh</button>
+    <div id="pgActions"></div>
+  </div>
+  <div class="content">
+
+    <!-- LIVE ORDERS -->
+    <div class="screen active" id="s-orders">
+      <div class="stats" id="ordStats">
+        <div class="sc"><div class="sc-acc" style="background:var(--red)"></div><div class="sc-body"><div class="sc-val" id="stActive">–</div><div class="sc-lbl">Active Orders</div></div></div>
+        <div class="sc"><div class="sc-acc" style="background:var(--orange)"></div><div class="sc-body"><div class="sc-val" id="stAvg">–</div><div class="sc-lbl">Avg Prep Time</div></div></div>
+        <div class="sc"><div class="sc-acc" style="background:var(--green)"></div><div class="sc-body"><div class="sc-val" id="stRev">–</div><div class="sc-lbl">Today Revenue</div></div></div>
+        <div class="sc"><div class="sc-acc" style="background:var(--blue)"></div><div class="sc-body"><div class="sc-val" id="stDone">–</div><div class="sc-lbl">Completed Today</div></div></div>
+      </div>
+      <div class="kanban" id="kanban"><div class="empty"><div class="spin"></div><br>Loading orders…</div></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" id="s-history">
+      <div class="tbl-card">
+        <div class="tbl-bar">
+          <input class="si" placeholder="🔍 Search name or ID…" oninput="fHist(this.value)">
+          <div style="display:flex;gap:6px" id="histFilt">
+            <button class="fb active" onclick="sHist('all',this)">All</button>
+            <button class="fb" onclick="sHist('completed',this)">Completed</button>
+            <button class="fb" onclick="sHist('cancelled',this)">Cancelled</button>
+          </div>
+          <button class="btn btn-secondary" style="margin-left:auto" onclick="exportCSV()">↓ CSV</button>
+        </div>
+        <table><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr></thead>
+        <tbody id="histBody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="screen" id="s-menu">
+      <div class="tbl-card">
+        <div class="tbl-bar">
+          <input class="si" placeholder="🔍 Search items…" oninput="fMenu(this.value)">
+          <div style="display:flex;gap:6px">
+            <button class="fb active" onclick="sCat('',this)">All</button>
+            <button class="fb" onclick="sCat('Pizzas',this)">Pizzas</button>
+            <button class="fb" onclick="sCat('Drinks',this)">Drinks</button>
+            <button class="fb" onclick="sCat('Sides',this)">Sides</button>
+            <button class="fb" onclick="sCat('Desserts',this)">Desserts</button>
+          </div>
+          <button class="btn btn-primary" style="margin-left:auto" onclick="openMI(null)">+ Add Item</button>
+        </div>
+        <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
+        <tbody id="menuBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- OFFERS -->
+    <div class="screen" id="s-offers">
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);max-width:680px;margin-bottom:16px">
+        <div class="sc"><div class="sc-acc" style="background:var(--green)"></div><div class="sc-body"><div class="sc-val" id="ofAct">–</div><div class="sc-lbl">Active</div></div></div>
+        <div class="sc"><div class="sc-acc" style="background:var(--muted)"></div><div class="sc-body"><div class="sc-val" id="ofExp">–</div><div class="sc-lbl">Expired</div></div></div>
+        <div class="sc"><div class="sc-acc" style="background:var(--orange)"></div><div class="sc-body"><div class="sc-val" id="ofTot">–</div><div class="sc-lbl">Total</div></div></div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-bar">
+          <span style="font-weight:600">Promo Codes</span>
+          <button class="btn btn-primary" style="margin-left:auto" onclick="openOF(null)">+ New Offer</button>
+        </div>
+        <table><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Expires</th><th>Min Order</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="offersBody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="screen" id="s-reviews">
+      <div class="tbl-card">
+        <div class="tbl-bar">
+          <span style="font-weight:600">Customer Reviews</span>
+          <div style="display:flex;gap:6px;margin-left:auto">
+            <button class="fb active" onclick="sRev('pending',this)">Pending</button>
+            <button class="fb" onclick="sRev('approved',this)">Approved</button>
+            <button class="fb" onclick="sRev('rejected',this)">Rejected</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="revBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="screen" id="s-settings">
+      <div class="sg" id="settGrid"><div class="empty"><div class="spin"></div></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Menu Item Modal -->
+<div class="mo" id="moMI">
+  <div class="mc">
+    <h2 id="miTitle">Add Menu Item</h2>
+    <div class="fg">
+      <div class="fi"><label>Name</label><input id="mi-n" placeholder="Pepperoni Pizza"></div>
+      <div class="fi"><label>Category</label><select id="mi-c"><option>Pizzas</option><option>Drinks</option><option>Sides</option><option>Desserts</option></select></div>
+      <div class="fi"><label>Price (R$)</label><input id="mi-p" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="fi"><label>Sort Order</label><input id="mi-s" type="number" placeholder="0"></div>
+    </div>
+    <div class="fg f1" style="margin-top:12px">
+      <div class="fi"><label>Description</label><textarea id="mi-d" placeholder="Describe the item…"></textarea></div>
+      <div class="fi"><label>Image Drive ID</label><input id="mi-i" placeholder="Google Drive file ID"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-top:8px;border-top:1px solid var(--border)">
+      <div><b style="font-size:14px">Available for ordering</b><br><span style="font-size:12px;color:var(--muted)">Hide from customers when off</span></div>
+      <button class="tog-sm on" id="mi-av" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+    </div>
+    <div class="ma">
+      <button class="btn btn-secondary" onclick="closeMo('moMI')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMI()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Offer Modal -->
+<div class="mo" id="moOF">
+  <div class="mc">
+    <h2 id="ofTitle">New Offer</h2>
+    <div class="fg">
+      <div class="fi"><label>Promo Code</label><input id="of-code" placeholder="PIZZA10" style="text-transform:uppercase"></div>
+      <div class="fi"><label>Type</label><select id="of-type"><option value="percent">Percentage (%)</option><option value="fixed">Fixed Amount (R$)</option></select></div>
+      <div class="fi"><label>Value</label><input id="of-val" type="number" step="0.01" placeholder="10"></div>
+      <div class="fi"><label>Min Order (R$)</label><input id="of-min" type="number" step="0.01" placeholder="0"></div>
+      <div class="fi"><label>Valid From</label><input id="of-from" type="date"></div>
+      <div class="fi"><label>Valid To</label><input id="of-to" type="date"></div>
+    </div>
+    <div class="fg f1" style="margin-top:12px">
+      <div class="fi"><label>Description</label><input id="of-desc" placeholder="10% off your first order"></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-secondary" onclick="closeMo('moOF')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOF()">Save Offer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const URL = '<?= ScriptApp.getService().getUrl() ?>';
+let KEY = localStorage.getItem('gpizza_key') || '';
+let cur = 'orders', timer = null;
+let menuAll = [], histAll = [], offersAll = [], revAll = [];
+let menuCat = '', menuQ = '', histF = 'all', histQ = '', revF = 'pending';
+let editMIRow = null, editOFRow = null;
+
+document.getElementById('pgDate').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+if (KEY) { document.getElementById('su').style.display = 'none'; boot(); }
+
+function doSetup() {
+  const k = document.getElementById('suKey').value.trim();
+  if (!k) return;
+  KEY = k; localStorage.setItem('gpizza_key', k);
+  document.getElementById('su').style.display = 'none';
+  boot();
+}
+document.getElementById('suKey').onkeydown = e => { if (e.key === 'Enter') doSetup(); };
+
+function boot() { loadOrders(); startTimer(); }
+
+// NAV
+const titles = {orders:'Live Orders',history:'Order History',menu:'Menu',offers:'Offers',reviews:'Reviews',settings:'Settings'};
+function go(p) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('s-'+p).classList.add('active');
+  document.querySelector(`[data-p="${p}"]`).classList.add('active');
+  document.getElementById('pgTitle').textContent = titles[p];
+  document.getElementById('pgActions').innerHTML = '';
+  cur = p; clearInterval(timer);
+  if (p==='orders'){ loadOrders(); startTimer(); }
+  else if(p==='history') loadHist();
+  else if(p==='menu') loadMenu();
+  else if(p==='offers') loadOffers();
+  else if(p==='reviews') loadReviews();
+  else if(p==='settings') loadSettings();
+}
+function refresh() { go(cur); }
+function startTimer() { clearInterval(timer); timer = setInterval(()=>{if(cur==='orders')loadOrders();},30000); }
+
+// API
+async function get(action, params={}) {
+  const q = new URLSearchParams({action,...params});
+  const r = await fetch(`${URL}?${q}`);
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error||'Error');
+  return d.data;
+}
+async function post(body) {
+  const r = await fetch(URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body,api_key:KEY})});
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error||'Error');
+  return d.data;
+}
+
+// TOAST
+function toast(msg,type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show '+type;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ORDERS
+const SCOLS = {received:'#FF9800',preparing:'#7B40CC',baking:'#E65100',ready:'#2E7D32',out_for_delivery:'#1A66DB',completed:'#546E7A'};
+const SNEXT = {received:'preparing',preparing:'baking',baking:'ready',ready:'out_for_delivery',out_for_delivery:'completed'};
+const SBTN  = {received:'Start Prep',preparing:'Baking',baking:'Mark Ready',ready:'Out for Delivery',out_for_delivery:'Delivered'};
+const ACTIVE = ['received','preparing','baking','ready','out_for_delivery'];
+
+async function loadOrders() {
+  try {
+    const orders = await get('orders-active');
+    renderKanban(orders);
+    const active = orders.filter(o=>ACTIVE.includes(o.status));
+    document.getElementById('stActive').textContent = active.length;
+    const done = orders.filter(o=>o.status==='completed');
+    document.getElementById('stDone').textContent = done.length;
+    document.getElementById('stRev').textContent = 'R$'+done.reduce((s,o)=>s+parseFloat(o.total||0),0).toFixed(0);
+    document.getElementById('stAvg').textContent = '~20 min';
+    const pend = orders.filter(o=>o.status==='received').length;
+    const badge = document.getElementById('nbadge');
+    badge.textContent = pend; badge.style.display = pend>0?'':'none';
+  } catch(e) { toast(e.message,'err'); }
+}
+
+function renderKanban(orders) {
+  const cols = ACTIVE.slice(0,4).map(st => ({st, color:SCOLS[st], orders:orders.filter(o=>o.status===st)}));
+  document.getElementById('kanban').innerHTML = cols.map(col=>`
+    <div>
+      <div class="kc-hdr" style="background:${col.color}1a">
+        <div class="kc-dot" style="background:${col.color}"></div>
+        <span style="font-size:13px;font-weight:600;color:${col.color}">${cap(col.st)}</span>
+        <div class="kc-cnt" style="background:${col.color}">${col.orders.length}</div>
+      </div>
+      ${col.orders.length===0?`<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Empty</div>`:''}
+      ${col.orders.map(o=>`
+        <div class="oc">
+          <div class="oc-stripe" style="background:${col.color}"></div>
+          <div class="oc-body">
+            <div style="display:flex;align-items:center">
+              <b style="font-size:14px">${o.order_id}</b>
+              <span style="margin-left:auto;font-size:11px;color:var(--muted)">${ago(o.created_at)}</span>
+            </div>
+            <div style="font-size:12px;margin-top:6px">👤 ${o.customer_name}</div>
+            <div style="font-size:11px;color:var(--muted);margin:5px 0">${fmtItems(o.items_json)}</div>
+            <div class="oc-footer">
+              <b style="color:var(--red)">R$${o.total}</b>
+              ${SNEXT[o.status]?`<button class="adv-btn" style="background:${col.color}" onclick="adv('${o.order_id}','${SNEXT[o.status]}')">${SBTN[o.status]}</button>`:''}
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+async function adv(id, status) {
+  try { await post({action:'order-status-update',order_id:id,status}); toast(`${id} → ${cap(status)}`,'ok'); loadOrders(); }
+  catch(e) { toast(e.message,'err'); }
+}
+
+// HISTORY
+async function loadHist() {
+  document.getElementById('histBody').innerHTML = '<tr><td colspan="7" class="empty"><div class="spin"></div></td></tr>';
+  try { histAll = await get('orders-history'); renderHist(); }
+  catch(e) { document.getElementById('histBody').innerHTML = `<tr><td colspan="7" class="empty">${e.message}</td></tr>`; }
+}
+function renderHist() {
+  let d = histAll;
+  if (histF!=='all') d = d.filter(o=>o.status===histF);
+  if (histQ) d = d.filter(o=>(o.order_id+o.customer_name).toLowerCase().includes(histQ));
+  document.getElementById('histBody').innerHTML = d.length===0
+    ? '<tr><td colspan="7" class="empty">No orders found</td></tr>'
+    : d.map(o=>`<tr>
+        <td><b style="color:var(--red)">${o.order_id}</b></td>
+        <td>${o.customer_name}</td>
+        <td style="color:var(--muted);font-size:12px;max-width:200px">${fmtItems(o.items_json)}</td>
+        <td><b>R$${o.total}</b></td>
+        <td>${sbadge(o.status)}</td>
+        <td style="color:var(--muted);font-size:12px">${fmtDate(o.created_at)}</td>
+        <td><button class="bx bx-e" onclick="alert('Order: ${o.order_id}\\nCustomer: ${o.customer_name}\\nTotal: R$${o.total}\\nStatus: ${o.status}\\nAddress: ${o.delivery_address||'Pickup'}\\nNotes: ${o.notes||\"—\"}')">View</button></td>
+      </tr>`).join('');
+}
+function fHist(v){histQ=v.toLowerCase();renderHist();}
+function sHist(f,el){histF=f;document.querySelectorAll('#histFilt .fb').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderHist();}
+function exportCSV(){
+  const rows=[['Order ID','Customer','Total','Status','Type','Date']].concat(histAll.map(o=>[o.order_id,o.customer_name,o.total,o.status,o.order_type,fmtDate(o.created_at)]));
+  const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));a.download='gpizza-orders.csv';a.click();
+}
+
+// MENU
+async function loadMenu() {
+  document.getElementById('menuBody').innerHTML = '<tr><td colspan="5" class="empty"><div class="spin"></div></td></tr>';
+  try { const d = await get('menu-admin'); menuAll = d; renderMenu(); }
+  catch(e) { document.getElementById('menuBody').innerHTML = `<tr><td colspan="5" class="empty">${e.message}</td></tr>`; }
+}
+function renderMenu() {
+  let d = menuAll;
+  if (menuCat) d = d.filter(i=>i.category===menuCat);
+  if (menuQ) d = d.filter(i=>i.name.toLowerCase().includes(menuQ));
+  document.getElementById('menuBody').innerHTML = d.length===0
+    ? '<tr><td colspan="5" class="empty">No items</td></tr>'
+    : d.map(item=>`<tr>
+        <td><b>${item.name}</b>${item.description?`<br><span style="font-size:12px;color:var(--muted)">${item.description}</span>`:''}</td>
+        <td><span class="badge" style="background:var(--surface);color:var(--muted)">${item.category}</span></td>
+        <td><b style="color:var(--red)">R$${item.price}</b></td>
+        <td><button class="tog-sm ${item.available===false?'off':'on'}" onclick="toggleAvail(${item._row},this)"></button></td>
+        <td><div class="axb"><button class="bx bx-e" onclick='openMI(${JSON.stringify(item)})'>Edit</button><button class="bx bx-d" onclick="delMI(${item._row},'${item.name}')">Delete</button></div></td>
+      </tr>`).join('');
+}
+function fMenu(v){menuQ=v.toLowerCase();renderMenu();}
+function sCat(c,el){menuCat=c;document.querySelectorAll('#s-menu .fb').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderMenu();}
+
+function openMI(item) {
+  editMIRow = item?item._row:null;
+  document.getElementById('miTitle').textContent = item?'Edit Menu Item':'Add Menu Item';
+  document.getElementById('mi-n').value=item?.name||'';
+  document.getElementById('mi-c').value=item?.category||'Pizzas';
+  document.getElementById('mi-p').value=item?.price||'';
+  document.getElementById('mi-s').value=item?.sort_order||'';
+  document.getElementById('mi-d').value=item?.description||'';
+  document.getElementById('mi-i').value=item?.image_drive_id||'';
+  const av=document.getElementById('mi-av');
+  av.className='tog-sm '+(item?.available===false?'off':'on');
+  document.getElementById('moMI').classList.add('open');
+}
+async function saveMI() {
+  try {
+    await post({
+      action: editMIRow?'updateMenuItem':'addMenuItem',
+      _row: editMIRow,
+      name: document.getElementById('mi-n').value,
+      category: document.getElementById('mi-c').value,
+      price: parseFloat(document.getElementById('mi-p').value),
+      sort_order: parseInt(document.getElementById('mi-s').value)||0,
+      description: document.getElementById('mi-d').value,
+      image_drive_id: document.getElementById('mi-i').value,
+      available: document.getElementById('mi-av').classList.contains('on'),
+    });
+    toast('Item saved','ok'); closeMo('moMI'); loadMenu();
+  } catch(e) { toast(e.message,'err'); }
+}
+async function delMI(row, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  try { await post({action:'deleteMenuItem',_row:row}); toast('Deleted','ok'); loadMenu(); }
+  catch(e) { toast(e.message,'err'); }
+}
+async function toggleAvail(row, btn) {
+  const on = btn.classList.contains('on');
+  btn.className='tog-sm '+(on?'off':'on');
+  try { await post({action:'updateMenuItem',_row:row,available:!on}); toast('Updated','ok'); }
+  catch(e) { toast(e.message,'err'); btn.className='tog-sm '+(on?'on':'off'); }
+}
+
+// OFFERS
+async function loadOffers() {
+  document.getElementById('offersBody').innerHTML = '<tr><td colspan="7" class="empty"><div class="spin"></div></td></tr>';
+  try { offersAll = await get('offers-admin'); renderOffers(); }
+  catch(e) { document.getElementById('offersBody').innerHTML = `<tr><td colspan="7" class="empty">${e.message}</td></tr>`; }
+}
+function renderOffers() {
+  const now = new Date();
+  const active = offersAll.filter(o=>o.active&&(!o.valid_to||new Date(o.valid_to)>=now));
+  document.getElementById('ofAct').textContent=active.length;
+  document.getElementById('ofExp').textContent=offersAll.length-active.length;
+  document.getElementById('ofTot').textContent=offersAll.length;
+  document.getElementById('offersBody').innerHTML = offersAll.length===0
+    ? '<tr><td colspan="7" class="empty">No offers yet</td></tr>'
+    : offersAll.map(o=>{
+        const isAct = o.active && (!o.valid_to||new Date(o.valid_to)>=now);
+        return `<tr>
+          <td><b style="font-size:15px">${o.code}</b></td>
+          <td><b style="color:var(--red);font-size:18px">${o.type==='percent'?o.value+'%':'R$'+o.value}</b></td>
+          <td style="color:var(--muted)">${o.type==='percent'?'Percentage':'Fixed'}</td>
+          <td style="color:var(--muted);font-size:12px">${o.valid_to||'No expiry'}</td>
+          <td style="color:var(--muted)">R$${o.min_order||'0'}</td>
+          <td><span class="badge" style="background:${isAct?'rgba(46,125,50,.1)':'rgba(0,0,0,.06)'};color:${isAct?'var(--green)':'var(--muted)'}">${isAct?'Active':'Expired'}</span></td>
+          <td><div class="axb"><button class="bx bx-e" onclick='openOF(${JSON.stringify(o)})'>Edit</button><button class="bx bx-d" onclick="delOF(${o._row},'${o.code}')">Delete</button></div></td>
+        </tr>`;
+      }).join('');
+}
+function openOF(o) {
+  editOFRow = o?o._row:null;
+  document.getElementById('ofTitle').textContent=o?'Edit Offer':'New Offer';
+  document.getElementById('of-code').value=o?.code||'';
+  document.getElementById('of-type').value=o?.type||'percent';
+  document.getElementById('of-val').value=o?.value||'';
+  document.getElementById('of-min').value=o?.min_order||'';
+  document.getElementById('of-from').value=o?.valid_from||'';
+  document.getElementById('of-to').value=o?.valid_to||'';
+  document.getElementById('of-desc').value=o?.description||'';
+  document.getElementById('moOF').classList.add('open');
+}
+async function saveOF() {
+  try {
+    await post({action:editOFRow?'updateOffer':'addOffer',_row:editOFRow,
+      code:document.getElementById('of-code').value.toUpperCase(),
+      type:document.getElementById('of-type').value,
+      value:parseFloat(document.getElementById('of-val').value),
+      min_order:parseFloat(document.getElementById('of-min').value)||0,
+      valid_from:document.getElementById('of-from').value,
+      valid_to:document.getElementById('of-to').value,
+      description:document.getElementById('of-desc').value,
+      active:true,
+    });
+    toast('Offer saved','ok'); closeMo('moOF'); loadOffers();
+  } catch(e) { toast(e.message,'err'); }
+}
+async function delOF(row,code) {
+  if (!confirm(`Delete "${code}"?`)) return;
+  try { await post({action:'deleteOffer',_row:row}); toast('Deleted','ok'); loadOffers(); }
+  catch(e) { toast(e.message,'err'); }
+}
+
+// REVIEWS
+async function loadReviews() {
+  document.getElementById('revBody').innerHTML='<tr><td colspan="5" class="empty"><div class="spin"></div></td></tr>';
+  try { revAll = await get('reviews-admin'); renderRevs(); }
+  catch(e) { document.getElementById('revBody').innerHTML=`<tr><td colspan="5" class="empty">${e.message}</td></tr>`; }
+}
+function renderRevs() {
+  const d = revAll.filter(r=>(r.status||'pending')===revF);
+  document.getElementById('revBody').innerHTML = d.length===0
+    ? `<tr><td colspan="5" class="empty">No ${revF} reviews</td></tr>`
+    : d.map(r=>`<tr>
+        <td><b>${r.customer_name||'Anonymous'}</b></td>
+        <td>${'⭐'.repeat(Math.min(5,parseInt(r.rating||5)))}</td>
+        <td style="color:var(--muted);max-width:300px">${r.comment||'—'}</td>
+        <td style="color:var(--muted);font-size:12px">${fmtDate(r.created_at)}</td>
+        <td><div class="axb">${revF==='pending'?`<button class="bx bx-a" onclick="actRev('${r.review_id||r.id}','approved')">Approve</button><button class="bx bx-d" onclick="actRev('${r.review_id||r.id}','rejected')">Reject</button>`:'—'}</div></td>
+      </tr>`).join('');
+}
+function sRev(f,el){revF=f;document.querySelectorAll('#s-reviews .fb').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderRevs();}
+async function actRev(id,status) {
+  try { await post({action:'updateReview',review_id:id,status}); toast('Review '+status,'ok'); loadReviews(); }
+  catch(e) { toast(e.message,'err'); }
+}
+
+// SETTINGS
+async function loadSettings() {
+  document.getElementById('settGrid').innerHTML='<div class="empty"><div class="spin"></div></div>';
+  try {
+    const s = await get('settings');
+    const isOpen = s.is_open==='true'||s.is_open===true;
+    document.getElementById('openTog').className='tog '+(isOpen?'on':'off');
+    document.getElementById('openLbl').textContent=isOpen?'🟢 Restaurant Open':'🔴 Restaurant Closed';
+    document.getElementById('settGrid').innerHTML=`
+      <div class="scard">
+        <h3>🚴 Delivery</h3>
+        ${srow('delivery_fee','Delivery Fee (R$)',s.delivery_fee)}
+        ${srow('free_delivery_above','Free Delivery Above (R$)',s.free_delivery_above)}
+        ${srow('estimated_delivery_min','Est. Delivery Time (min)',s.estimated_delivery_min)}
+        ${srow('estimated_pickup_min','Est. Pickup Time (min)',s.estimated_pickup_min)}
+        <button class="btn btn-primary" style="margin-top:14px" onclick="saveS(['delivery_fee','free_delivery_above','estimated_delivery_min','estimated_pickup_min'])">Save</button>
+      </div>
+      <div class="scard">
+        <h3>🎁 Loyalty</h3>
+        ${srow('loyalty_points_per_real','Points per R$1',s.loyalty_points_per_real||'1')}
+        ${srow('loyalty_min_redeem','Min points to redeem',s.loyalty_min_redeem||'100')}
+        ${srow('loyalty_redeem_rate','Points per R$5',s.loyalty_redeem_rate||'100')}
+        <button class="btn btn-primary" style="margin-top:14px" onclick="saveS(['loyalty_points_per_real','loyalty_min_redeem','loyalty_redeem_rate'])">Save</button>
+      </div>
+      <div class="scard" style="grid-column:1/-1">
+        <h3>📍 Restaurant Location</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+          ${srow('address_street','Street Address',s.address_street)}
+          ${srow('address_city','City',s.address_city)}
+          ${srow('address_postal','Postal Code',s.address_postal)}
+          ${srow('address_state','State',s.address_state)}
+          ${srow('delivery_radius_km','Delivery Radius (km)',s.delivery_radius_km||'10')}
+          ${srow('maps_embed_url','Google Maps Embed URL',s.maps_embed_url)}
+        </div>
+        ${s.maps_embed_url?`<iframe class="map-frame" src="${s.maps_embed_url}" allowfullscreen loading="lazy" style="border:none"></iframe>`:
+          `<div class="map-frame" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">
+            Paste a Google Maps embed URL above to see preview<br><small>maps.google.com → Share → Embed a map → copy src="..." value</small>
+          </div>`}
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn btn-primary" onclick="saveS(['address_street','address_city','address_postal','address_state','delivery_radius_km','maps_embed_url'])">Save Location</button>
+          ${s.maps_embed_url?`<a href="${s.maps_embed_url.replace('output=embed','')}" target="_blank" class="btn btn-outline">🗺 Open in Maps</a>`:''}
+        </div>
+      </div>`;
+  } catch(e) { document.getElementById('settGrid').innerHTML=`<div class="empty">${e.message}</div>`; }
+}
+function srow(k,label,val){return`<div class="sr"><div><div class="sl">${label}</div></div><input class="sinp" id="s-${k}" value="${val||''}"></div>`;}
+async function saveS(keys) {
+  try {
+    for(const k of keys){const v=document.getElementById('s-'+k)?.value;if(v!==undefined)await post({action:'updateSetting',key:k,value:v});}
+    toast('Saved','ok'); loadSettings();
+  } catch(e) { toast(e.message,'err'); }
+}
+async function toggleOpen() {
+  const isOpen = document.getElementById('openTog').classList.contains('on');
+  try { await post({action:'updateSetting',key:'is_open',value:String(!isOpen)}); toast(isOpen?'Restaurant closed':'Restaurant opened','ok'); loadSettings(); }
+  catch(e) { toast(e.message,'err'); }
+}
+
+// MODALS
+function closeMo(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// UTILS
+function cap(s){return s?s.charAt(0).toUpperCase()+s.replace(/_/g,' ').slice(1):'';}
+function fmtItems(j){try{const a=typeof j==='string'?JSON.parse(j):j;return Array.isArray(a)?a.map(i=>`${i.qty}× ${i.name}`).join(', '):(j||'—');}catch{return j||'—';}}
+function fmtDate(d){if(!d)return'—';try{return new Date(d).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return d;}}
+function ago(d){if(!d)return'';const m=Math.round((Date.now()-new Date(d))/60000);return m<1?'just now':m<60?m+'m ago':Math.round(m/60)+'h ago';}
+function sbadge(s){const C={received:'#FF9800',preparing:'#7B40CC',baking:'#E65100',ready:'#2E7D32',out_for_delivery:'#1A66DB',completed:'#546E7A',cancelled:'#C62828'};const c=C[s]||'#999';return`<span class="badge" style="background:${c}1a;color:${c}">${cap(s)}</span>`;}
+</script>
+</body>
+</html>

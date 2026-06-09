@@ -7,6 +7,14 @@
 function doGet(e) {
   try {
     const p = e.parameter;
+
+    // Serve admin panel when no action is provided
+    if (!p.action) {
+      return HtmlService.createHtmlOutputFromFile('admin')
+        .setTitle('GPizza Admin')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
     switch (p.action) {
       case 'menu':
         return ok(MenuService.getMenu());
@@ -27,6 +35,22 @@ function doGet(e) {
 
       case 'settings':
         return ok(SettingsService.getAll());
+
+      // ── Admin endpoints ────────────────────────────────────────────────────
+      case 'menu-admin':
+        return ok(MenuService.getAllItems());
+
+      case 'orders-active':
+        return ok(OrderService.getActive());
+
+      case 'orders-history':
+        return ok(OrderService.getAll());
+
+      case 'offers-admin':
+        return ok(OffersService.getAllOffers());
+
+      case 'reviews-admin':
+        return ok(ReviewService.getAll());
 
       default:
         return err('Unknown action', 400);
@@ -68,6 +92,32 @@ function doPost(e) {
       case 'updateSetting':
         Auth.requireStaffKey(body.api_key);
         return ok(SettingsService.update(body.key, body.value));
+
+      // ── Menu CRUD ──────────────────────────────────────────────────────────
+      case 'addMenuItem':
+        Auth.requireStaffKey(body.api_key);
+        return ok(MenuService.addItem(body));
+
+      case 'updateMenuItem':
+        Auth.requireStaffKey(body.api_key);
+        return ok(MenuService.updateItem(body._row, body));
+
+      case 'deleteMenuItem':
+        Auth.requireStaffKey(body.api_key);
+        return ok(MenuService.deleteItem(body._row));
+
+      // ── Offer CRUD ─────────────────────────────────────────────────────────
+      case 'addOffer':
+        Auth.requireStaffKey(body.api_key);
+        return ok(OffersService.addOffer(body));
+
+      case 'updateOffer':
+        Auth.requireStaffKey(body.api_key);
+        return ok(OffersService.updateOffer(body._row, body));
+
+      case 'deleteOffer':
+        Auth.requireStaffKey(body.api_key);
+        return ok(OffersService.deleteOffer(body._row));
 
       default:
         return err('Unknown action', 400);
