@@ -75,7 +75,7 @@ class ApiService {
 
     final response = await _client.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'text/plain'},
       body: jsonEncode(payload),
     );
 
