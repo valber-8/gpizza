@@ -1,0 +1,16 @@
+# Firebase service account keys
+*-adminsdk-*.json
+
+# Claude Code local settings
+.claude/
+
+# Session artifacts
+.resume
+session_notes.md
+
+# Environment files with real values
+mobile/.env
+flutter/.env
+
+# Node
+node_modules/

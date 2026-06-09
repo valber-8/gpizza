@@ -1,0 +1,55 @@
+{
+  "Menu": {
+    "headers": ["id", "category", "name", "description", "price", "image_drive_id", "available", "sort_order"],
+    "rows": [
+      ["item_001", "Pizzas",     "Margherita Clássica", "Molho de tomate artesanal, mozzarella de búfala, manjericão fresco", 45.90, "", true, 1],
+      ["item_002", "Pizzas",     "Pepperoni",           "Molho de tomate, mozzarella, fatias generosas de pepperoni",          52.90, "", true, 2],
+      ["item_003", "Pizzas",     "Quatro Queijos",      "Mozzarella, gorgonzola, parmesão e catupiry",                        55.90, "", true, 3],
+      ["item_004", "Pizzas",     "Portuguesa",          "Molho de tomate, presunto, ovos, cebola, azeitona, mozzarella",      49.90, "", true, 4],
+      ["item_005", "Bebidas",    "Refrigerante Lata",   "Coca-Cola, Guaraná Antarctica ou Sprite — 350ml",                    6.00, "", true, 1],
+      ["item_006", "Bebidas",    "Suco Natural",        "Laranja, limão ou maracujá — 400ml",                                12.00, "", true, 2],
+      ["item_007", "Sobremesas", "Brownie de Chocolate","Brownie caseiro com sorvete de creme",                              18.00, "", true, 1]
+    ]
+  },
+
+  "Offers": {
+    "headers": ["id", "title", "description", "type", "value", "min_order", "valid_from", "valid_to", "active", "code"],
+    "rows": [
+      ["offer_001", "10% na primeira compra",  "Use o código no carrinho e ganhe 10% de desconto no seu primeiro pedido", "percent", 10, 0,  "", "", true, "BEMVINDO"],
+      ["offer_002", "R$ 15 OFF acima de R$ 80","Pedidos acima de R$ 80,00 ganham R$ 15,00 de desconto",                  "fixed",   15, 80, "", "", true, "PIZZA15"]
+    ]
+  },
+
+  "Orders": {
+    "headers": ["order_id", "customer_id", "customer_name", "phone", "items_json", "subtotal", "discount", "offer_code", "total", "status", "notes", "delivery_address", "order_type", "created_at", "updated_at", "points_used", "points_earned", "task_id"],
+    "rows": []
+  },
+
+  "Customers": {
+    "headers": ["customer_id", "name", "phone", "email", "address", "total_orders", "total_spent", "first_order_at", "last_order_at", "notes", "loyalty_points"],
+    "rows": []
+  },
+
+  "Reviews": {
+    "headers": ["review_id", "customer_id", "customer_name", "order_id", "rating", "comment", "created_at", "status"],
+    "rows": []
+  },
+
+  "Settings": {
+    "headers": ["key", "value", "description"],
+    "rows": [
+      ["restaurant_name",          "GPizza",                       "Nome do restaurante"],
+      ["address",                  "Rua das Pizzas, 123 — Centro", "Endereço completo"],
+      ["phone",                    "(11) 9 9999-9999",             "Telefone de contato"],
+      ["whatsapp",                 "5511999999999",                "Número WhatsApp (só dígitos com DDI)"],
+      ["delivery_fee",             "5.00",                         "Taxa de entrega em reais"],
+      ["min_delivery_order",       "30.00",                        "Pedido mínimo para entrega"],
+      ["estimated_delivery_min",   "40",                           "Tempo estimado de entrega (minutos)"],
+      ["estimated_pickup_min",     "20",                           "Tempo estimado de retirada (minutos)"],
+      ["opening_hours",            "Ter–Dom 18h–23h",              "Horário de funcionamento (texto livre)"],
+      ["is_open",                  "true",                         "Restaurante aberto agora? (true/false)"],
+      ["instagram",                "@gpizza",                      "Usuário do Instagram"],
+      ["facebook",                 "/gpizza",                      "Página do Facebook"]
+    ]
+  }
+}

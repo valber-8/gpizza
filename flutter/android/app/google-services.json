@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "52545957572",
+    "project_id": "gpizza-firebase",
+    "storage_bucket": "gpizza-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:52545957572:android:27e8d09d58c7cb1d20a391",
+        "android_client_info": {
+          "package_name": "com.example.gpizza"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "FIREBASE_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
