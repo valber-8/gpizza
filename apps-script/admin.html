@@ -128,6 +128,7 @@ tr:last-child td{border-bottom:none}
     <input type="password" id="suKey" placeholder="••••••••••••" />
     <button onclick="doSetup()">Sign In</button>
     <p style="margin-top:10px;font-size:11px;color:#bbb">Key stored locally in your browser</p>
+    <p id="su-err" style="margin-top:8px;font-size:11px;color:red;min-height:14px"></p>
   </div>
 </div>
 
@@ -296,35 +297,55 @@ tr:last-child td{border-bottom:none}
 <div class="toast" id="toast"></div>
 
 <script>
-const URL = '<?= ScriptApp.getService().getUrl() ?>';
-let KEY = localStorage.getItem('gpizza_key') || '';
-let cur = 'orders', timer = null;
-let menuAll = [], histAll = [], offersAll = [], revAll = [];
-let menuCat = '', menuQ = '', histF = 'all', histQ = '', revF = 'pending';
-let editMIRow = null, editOFRow = null;
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+function gsr1(fn,a1){return new Promise(function(res,rej){google.script.run.withSuccessHandler(function(r){res(typeof r==='string'?JSON.parse(r):r);}).withFailureHandler(function(e){rej(new Error(e.message||'Error'));})[fn](a1);});}
+function gsr2(fn,a1,a2){return new Promise(function(res,rej){google.script.run.withSuccessHandler(function(r){res(typeof r==='string'?JSON.parse(r):r);}).withFailureHandler(function(e){rej(new Error(e.message||'Error'));})[fn](a1,a2);});}
+function gsr3(fn,a1,a2,a3){return new Promise(function(res,rej){google.script.run.withSuccessHandler(function(r){res(typeof r==='string'?JSON.parse(r):r);}).withFailureHandler(function(e){rej(new Error(e.message||'Error'));})[fn](a1,a2,a3);});}
+
+var KEY = lsGet('gpizza_key') || '';
+var cur = 'orders', timer = null;
+var menuAll = [], histAll = [], offersAll = [], revAll = [];
+var menuCat = '', menuQ = '', histF = 'all', histQ = '', revF = 'pending';
+var editMIRow = null, editOFRow = null;
 
 document.getElementById('pgDate').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
 if (KEY) { document.getElementById('su').style.display = 'none'; boot(); }
 
 function doSetup() {
-  const k = document.getElementById('suKey').value.trim();
+  var k = document.getElementById('suKey').value.trim();
   if (!k) return;
-  KEY = k; localStorage.setItem('gpizza_key', k);
-  document.getElementById('su').style.display = 'none';
-  boot();
+  var btn = document.getElementById('su').querySelector('button');
+  btn.textContent = 'Checking...'; btn.disabled = true;
+  gsr1('adminCheck', k).then(function(ok) {
+    if (!ok) {
+      document.getElementById('su-err').textContent = 'Wrong API key';
+      btn.textContent = 'Sign In'; btn.disabled = false;
+      return;
+    }
+    KEY = k; lsSet('gpizza_key', k);
+    document.getElementById('su').style.display = 'none';
+    boot();
+  }).catch(function(e) {
+    document.getElementById('su-err').textContent = e.message;
+    btn.textContent = 'Sign In'; btn.disabled = false;
+  });
 }
-document.getElementById('suKey').onkeydown = e => { if (e.key === 'Enter') doSetup(); };
+document.getElementById('suKey').onkeydown = function(e) { if (e.key === 'Enter') doSetup(); };
+document.getElementById('su').querySelector('button').addEventListener('click', doSetup);
 
 function boot() { loadOrders(); startTimer(); }
 
-// NAV
-const titles = {orders:'Live Orders',history:'Order History',menu:'Menu',offers:'Offers',reviews:'Reviews',settings:'Settings'};
+var titles = {orders:'Live Orders',history:'Order History',menu:'Menu',offers:'Offers',reviews:'Reviews',settings:'Settings'};
 function go(p) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  var screens = document.querySelectorAll('.screen');
+  for (var i=0;i<screens.length;i++) screens[i].classList.remove('active');
+  var nis = document.querySelectorAll('.ni');
+  for (var i=0;i<nis.length;i++) nis[i].classList.remove('active');
   document.getElementById('s-'+p).classList.add('active');
-  document.querySelector(`[data-p="${p}"]`).classList.add('active');
+  document.querySelector('[data-p="'+p+'"]').classList.add('active');
   document.getElementById('pgTitle').textContent = titles[p];
   document.getElementById('pgActions').innerHTML = '';
   cur = p; clearInterval(timer);
@@ -336,331 +357,346 @@ function go(p) {
   else if(p==='settings') loadSettings();
 }
 function refresh() { go(cur); }
-function startTimer() { clearInterval(timer); timer = setInterval(()=>{if(cur==='orders')loadOrders();},30000); }
+function startTimer() { clearInterval(timer); timer = setInterval(function(){if(cur==='orders')loadOrders();},30000); }
 
-// API
-async function get(action, params={}) {
-  const q = new URLSearchParams({action,...params});
-  const r = await fetch(`${URL}?${q}`);
-  const d = await r.json();
-  if (!d.ok) throw new Error(d.error||'Error');
-  return d.data;
-}
-async function post(body) {
-  const r = await fetch(URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body,api_key:KEY})});
-  const d = await r.json();
-  if (!d.ok) throw new Error(d.error||'Error');
-  return d.data;
-}
-
-// TOAST
-function toast(msg,type='') {
-  const t = document.getElementById('toast');
+function toast(msg, type) {
+  type = type || '';
+  var t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast show '+type;
-  setTimeout(()=>t.classList.remove('show'),3000);
+  setTimeout(function(){t.classList.remove('show');},3000);
 }
 
-// ORDERS
-const SCOLS = {received:'#FF9800',preparing:'#7B40CC',baking:'#E65100',ready:'#2E7D32',out_for_delivery:'#1A66DB',completed:'#546E7A'};
-const SNEXT = {received:'preparing',preparing:'baking',baking:'ready',ready:'out_for_delivery',out_for_delivery:'completed'};
-const SBTN  = {received:'Start Prep',preparing:'Baking',baking:'Mark Ready',ready:'Out for Delivery',out_for_delivery:'Delivered'};
-const ACTIVE = ['received','preparing','baking','ready','out_for_delivery'];
+var SCOLS = {pending:'#E53935',received:'#FF9800',preparing:'#7B40CC',baking:'#E65100',ready:'#2E7D32',out_for_delivery:'#1A66DB',completed:'#546E7A'};
+var SNEXT = {pending:'received',received:'preparing',preparing:'baking',baking:'ready',ready:'out_for_delivery',out_for_delivery:'completed'};
+var SBTN  = {pending:'Accept',received:'Start Prep',preparing:'Baking',baking:'Mark Ready',ready:'Out for Delivery',out_for_delivery:'Delivered'};
+var ACTIVE = ['pending','received','preparing','baking','ready','out_for_delivery'];
 
-async function loadOrders() {
-  try {
-    const orders = await get('orders-active');
+function loadOrders() {
+  return gsr1('adminGetActiveOrders', KEY).then(function(orders) {
     renderKanban(orders);
-    const active = orders.filter(o=>ACTIVE.includes(o.status));
+    var active = orders.filter(function(o){return ACTIVE.indexOf(o.status)>=0;});
     document.getElementById('stActive').textContent = active.length;
-    const done = orders.filter(o=>o.status==='completed');
+    var done = orders.filter(function(o){return o.status==='completed';});
     document.getElementById('stDone').textContent = done.length;
-    document.getElementById('stRev').textContent = 'R$'+done.reduce((s,o)=>s+parseFloat(o.total||0),0).toFixed(0);
+    document.getElementById('stRev').textContent = 'R$'+done.reduce(function(s,o){return s+parseFloat(o.total||0);},0).toFixed(0);
     document.getElementById('stAvg').textContent = '~20 min';
-    const pend = orders.filter(o=>o.status==='received').length;
-    const badge = document.getElementById('nbadge');
+    var pend = orders.filter(function(o){return o.status==='pending'||o.status==='received';}).length;
+    var badge = document.getElementById('nbadge');
     badge.textContent = pend; badge.style.display = pend>0?'':'none';
-  } catch(e) { toast(e.message,'err'); }
+  }).catch(function(e){toast(e.message,'err');});
 }
 
 function renderKanban(orders) {
-  const cols = ACTIVE.slice(0,4).map(st => ({st, color:SCOLS[st], orders:orders.filter(o=>o.status===st)}));
-  document.getElementById('kanban').innerHTML = cols.map(col=>`
-    <div>
-      <div class="kc-hdr" style="background:${col.color}1a">
-        <div class="kc-dot" style="background:${col.color}"></div>
-        <span style="font-size:13px;font-weight:600;color:${col.color}">${cap(col.st)}</span>
-        <div class="kc-cnt" style="background:${col.color}">${col.orders.length}</div>
-      </div>
-      ${col.orders.length===0?`<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Empty</div>`:''}
-      ${col.orders.map(o=>`
-        <div class="oc">
-          <div class="oc-stripe" style="background:${col.color}"></div>
-          <div class="oc-body">
-            <div style="display:flex;align-items:center">
-              <b style="font-size:14px">${o.order_id}</b>
-              <span style="margin-left:auto;font-size:11px;color:var(--muted)">${ago(o.created_at)}</span>
-            </div>
-            <div style="font-size:12px;margin-top:6px">👤 ${o.customer_name}</div>
-            <div style="font-size:11px;color:var(--muted);margin:5px 0">${fmtItems(o.items_json)}</div>
-            <div class="oc-footer">
-              <b style="color:var(--red)">R$${o.total}</b>
-              ${SNEXT[o.status]?`<button class="adv-btn" style="background:${col.color}" onclick="adv('${o.order_id}','${SNEXT[o.status]}')">${SBTN[o.status]}</button>`:''}
-            </div>
-          </div>
-        </div>`).join('')}
-    </div>`).join('');
+  var html = '';
+  var cols = ACTIVE.slice(0,5);
+  for (var ci=0;ci<cols.length;ci++) {
+    var st = cols[ci], color = SCOLS[st];
+    var colOrders = orders.filter(function(o){return o.status===st;});
+    html += '<div>';
+    html += '<div class="kc-hdr" style="background:'+color+'1a">';
+    html += '<div class="kc-dot" style="background:'+color+'"></div>';
+    html += '<span style="font-size:13px;font-weight:600;color:'+color+'">'+cap(st)+'</span>';
+    html += '<div class="kc-cnt" style="background:'+color+'">'+colOrders.length+'</div>';
+    html += '</div>';
+    if (colOrders.length===0) html += '<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Empty</div>';
+    for (var oi=0;oi<colOrders.length;oi++) {
+      var o = colOrders[oi];
+      html += '<div class="oc"><div class="oc-stripe" style="background:'+color+'"></div><div class="oc-body">';
+      html += '<div style="display:flex;align-items:center"><b style="font-size:14px">'+o.order_id+'</b>';
+      html += '<span style="margin-left:auto;font-size:11px;color:var(--muted)">'+ago(o.created_at)+'</span></div>';
+      html += '<div style="font-size:12px;margin-top:6px">'+o.customer_name+'</div>';
+      html += '<div style="font-size:11px;color:var(--muted);margin:5px 0">'+fmtItems(o.items_json)+'</div>';
+      html += '<div class="oc-footer"><b style="color:var(--red)">R$'+o.total+'</b>';
+      if (SNEXT[o.status]) html += '<button class="adv-btn" style="background:'+color+'" data-adv data-id="'+o.order_id+'" data-next="'+SNEXT[o.status]+'">'+SBTN[o.status]+'</button>';
+      html += '</div></div></div>';
+    }
+    html += '</div>';
+  }
+  document.getElementById('kanban').innerHTML = html;
 }
 
-async function adv(id, status) {
-  try { await post({action:'order-status-update',order_id:id,status}); toast(`${id} → ${cap(status)}`,'ok'); loadOrders(); }
-  catch(e) { toast(e.message,'err'); }
+function adv(id, status) {
+  toast('Updating...','');
+  gsr3('adminUpdateStatus', KEY, id, status).then(function(){
+    toast(id+' updated','ok'); loadOrders();
+  }).catch(function(e){toast(e.message,'err');});
 }
 
-// HISTORY
-async function loadHist() {
+function loadHist() {
   document.getElementById('histBody').innerHTML = '<tr><td colspan="7" class="empty"><div class="spin"></div></td></tr>';
-  try { histAll = await get('orders-history'); renderHist(); }
-  catch(e) { document.getElementById('histBody').innerHTML = `<tr><td colspan="7" class="empty">${e.message}</td></tr>`; }
+  return gsr1('adminGetAllOrders', KEY).then(function(d){histAll=d;renderHist();}).catch(function(e){
+    document.getElementById('histBody').innerHTML = '<tr><td colspan="7" class="empty">'+e.message+'</td></tr>';
+  });
 }
 function renderHist() {
-  let d = histAll;
-  if (histF!=='all') d = d.filter(o=>o.status===histF);
-  if (histQ) d = d.filter(o=>(o.order_id+o.customer_name).toLowerCase().includes(histQ));
-  document.getElementById('histBody').innerHTML = d.length===0
-    ? '<tr><td colspan="7" class="empty">No orders found</td></tr>'
-    : d.map(o=>`<tr>
-        <td><b style="color:var(--red)">${o.order_id}</b></td>
-        <td>${o.customer_name}</td>
-        <td style="color:var(--muted);font-size:12px;max-width:200px">${fmtItems(o.items_json)}</td>
-        <td><b>R$${o.total}</b></td>
-        <td>${sbadge(o.status)}</td>
-        <td style="color:var(--muted);font-size:12px">${fmtDate(o.created_at)}</td>
-        <td><button class="bx bx-e" onclick="alert('Order: ${o.order_id}\\nCustomer: ${o.customer_name}\\nTotal: R$${o.total}\\nStatus: ${o.status}\\nAddress: ${o.delivery_address||'Pickup'}\\nNotes: ${o.notes||\"—\"}')">View</button></td>
-      </tr>`).join('');
+  var d = histAll;
+  if (histF!=='all') d = d.filter(function(o){return o.status===histF;});
+  if (histQ) d = d.filter(function(o){return (o.order_id+o.customer_name).toLowerCase().indexOf(histQ)>=0;});
+  if (d.length===0){document.getElementById('histBody').innerHTML='<tr><td colspan="7" class="empty">No orders found</td></tr>';return;}
+  var html='';
+  for(var i=0;i<d.length;i++){
+    var o=d[i];
+    html+='<tr><td><b style="color:var(--red)">'+o.order_id+'</b></td><td>'+o.customer_name+'</td>';
+    html+='<td style="color:var(--muted);font-size:12px;max-width:200px">'+fmtItems(o.items_json)+'</td>';
+    html+='<td><b>R$'+o.total+'</b></td><td>'+sbadge(o.status)+'</td>';
+    html+='<td style="color:var(--muted);font-size:12px">'+fmtDate(o.created_at)+'</td>';
+    html+='<td><button class="bx bx-e" data-view-ord="'+i+'">View</button></td></tr>';
+  }
+  document.getElementById('histBody').innerHTML=html;
+}
+function viewOrd(idx){
+  var o=histAll[idx];
+  alert('Order: '+o.order_id+'\nCustomer: '+o.customer_name+'\nTotal: R$'+o.total+'\nStatus: '+o.status+'\nAddress: '+(o.delivery_address||'Pickup')+'\nNotes: '+(o.notes||'-'));
 }
 function fHist(v){histQ=v.toLowerCase();renderHist();}
-function sHist(f,el){histF=f;document.querySelectorAll('#histFilt .fb').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderHist();}
+function sHist(f,el){histF=f;var bs=document.querySelectorAll('#histFilt .fb');for(var i=0;i<bs.length;i++)bs[i].classList.remove('active');el.classList.add('active');renderHist();}
 function exportCSV(){
-  const rows=[['Order ID','Customer','Total','Status','Type','Date']].concat(histAll.map(o=>[o.order_id,o.customer_name,o.total,o.status,o.order_type,fmtDate(o.created_at)]));
-  const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));a.download='gpizza-orders.csv';a.click();
+  var rows=[['Order ID','Customer','Total','Status','Type','Date']];
+  for(var i=0;i<histAll.length;i++){var o=histAll[i];rows.push([o.order_id,o.customer_name,o.total,o.status,o.order_type,fmtDate(o.created_at)]);}
+  var a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(rows.map(function(r){return r.join(',');}).join('\n'));a.download='gpizza-orders.csv';a.click();
 }
 
-// MENU
-async function loadMenu() {
+function loadMenu() {
   document.getElementById('menuBody').innerHTML = '<tr><td colspan="5" class="empty"><div class="spin"></div></td></tr>';
-  try { const d = await get('menu-admin'); menuAll = d; renderMenu(); }
-  catch(e) { document.getElementById('menuBody').innerHTML = `<tr><td colspan="5" class="empty">${e.message}</td></tr>`; }
+  return gsr1('adminGetMenu', KEY).then(function(d){menuAll=d;renderMenu();}).catch(function(e){
+    document.getElementById('menuBody').innerHTML='<tr><td colspan="5" class="empty">'+e.message+'</td></tr>';
+  });
 }
 function renderMenu() {
-  let d = menuAll;
-  if (menuCat) d = d.filter(i=>i.category===menuCat);
-  if (menuQ) d = d.filter(i=>i.name.toLowerCase().includes(menuQ));
-  document.getElementById('menuBody').innerHTML = d.length===0
-    ? '<tr><td colspan="5" class="empty">No items</td></tr>'
-    : d.map(item=>`<tr>
-        <td><b>${item.name}</b>${item.description?`<br><span style="font-size:12px;color:var(--muted)">${item.description}</span>`:''}</td>
-        <td><span class="badge" style="background:var(--surface);color:var(--muted)">${item.category}</span></td>
-        <td><b style="color:var(--red)">R$${item.price}</b></td>
-        <td><button class="tog-sm ${item.available===false?'off':'on'}" onclick="toggleAvail(${item._row},this)"></button></td>
-        <td><div class="axb"><button class="bx bx-e" onclick='openMI(${JSON.stringify(item)})'>Edit</button><button class="bx bx-d" onclick="delMI(${item._row},'${item.name}')">Delete</button></div></td>
-      </tr>`).join('');
+  var d = menuAll;
+  if (menuCat) d = d.filter(function(i){return i.category===menuCat;});
+  if (menuQ) d = d.filter(function(i){return i.name.toLowerCase().indexOf(menuQ)>=0;});
+  if(d.length===0){document.getElementById('menuBody').innerHTML='<tr><td colspan="5" class="empty">No items</td></tr>';return;}
+  var html='';
+  for(var i=0;i<d.length;i++){
+    var item=d[i];
+    var avail = item.available!==false;
+    html+='<tr><td><b>'+item.name+'</b>'+(item.description?'<br><span style="font-size:12px;color:var(--muted)">'+item.description+'</span>':'')+'</td>';
+    html+='<td><span class="badge" style="background:var(--surface);color:var(--muted)">'+item.category+'</span></td>';
+    html+='<td><b style="color:var(--red)">R$'+item.price+'</b></td>';
+    html+='<td><button class="tog-sm '+(avail?'on':'off')+'" data-avail data-row="'+item._row+'"></button></td>';
+    html+='<td><div class="axb"><button class="bx bx-e" data-edit-mi="'+i+'">Edit</button>';
+    html+='<button class="bx bx-d" data-del-mi data-row="'+item._row+'" data-name="'+item.name.replace(/"/g,'&quot;')+'">Delete</button></div></td></tr>';
+  }
+  document.getElementById('menuBody').innerHTML=html;
 }
 function fMenu(v){menuQ=v.toLowerCase();renderMenu();}
-function sCat(c,el){menuCat=c;document.querySelectorAll('#s-menu .fb').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderMenu();}
+function sCat(c,el){menuCat=c;var bs=document.querySelectorAll('#s-menu .fb');for(var i=0;i<bs.length;i++)bs[i].classList.remove('active');el.classList.add('active');renderMenu();}
 
 function openMI(item) {
-  editMIRow = item?item._row:null;
-  document.getElementById('miTitle').textContent = item?'Edit Menu Item':'Add Menu Item';
-  document.getElementById('mi-n').value=item?.name||'';
-  document.getElementById('mi-c').value=item?.category||'Pizzas';
-  document.getElementById('mi-p').value=item?.price||'';
-  document.getElementById('mi-s').value=item?.sort_order||'';
-  document.getElementById('mi-d').value=item?.description||'';
-  document.getElementById('mi-i').value=item?.image_drive_id||'';
-  const av=document.getElementById('mi-av');
-  av.className='tog-sm '+(item?.available===false?'off':'on');
+  editMIRow = item ? item._row : null;
+  document.getElementById('miTitle').textContent = item ? 'Edit Menu Item' : 'Add Menu Item';
+  document.getElementById('mi-n').value = (item && item.name) || '';
+  document.getElementById('mi-c').value = (item && item.category) || 'Pizzas';
+  document.getElementById('mi-p').value = (item && item.price) || '';
+  document.getElementById('mi-s').value = (item && item.sort_order) || '';
+  document.getElementById('mi-d').value = (item && item.description) || '';
+  document.getElementById('mi-i').value = (item && item.image_drive_id) || '';
+  var av = document.getElementById('mi-av');
+  av.className = 'tog-sm '+((item && item.available===false) ? 'off' : 'on');
   document.getElementById('moMI').classList.add('open');
 }
-async function saveMI() {
-  try {
-    await post({
-      action: editMIRow?'updateMenuItem':'addMenuItem',
-      _row: editMIRow,
-      name: document.getElementById('mi-n').value,
-      category: document.getElementById('mi-c').value,
-      price: parseFloat(document.getElementById('mi-p').value),
-      sort_order: parseInt(document.getElementById('mi-s').value)||0,
-      description: document.getElementById('mi-d').value,
-      image_drive_id: document.getElementById('mi-i').value,
-      available: document.getElementById('mi-av').classList.contains('on'),
-    });
+function saveMI() {
+  var d = {
+    _row: editMIRow,
+    name: document.getElementById('mi-n').value,
+    category: document.getElementById('mi-c').value,
+    price: parseFloat(document.getElementById('mi-p').value),
+    sort_order: parseInt(document.getElementById('mi-s').value)||0,
+    description: document.getElementById('mi-d').value,
+    image_drive_id: document.getElementById('mi-i').value,
+    available: document.getElementById('mi-av').classList.contains('on')
+  };
+  gsr2('adminSaveMenuItem', KEY, JSON.stringify(d)).then(function(){
     toast('Item saved','ok'); closeMo('moMI'); loadMenu();
-  } catch(e) { toast(e.message,'err'); }
+  }).catch(function(e){toast(e.message,'err');});
 }
-async function delMI(row, name) {
-  if (!confirm(`Delete "${name}"?`)) return;
-  try { await post({action:'deleteMenuItem',_row:row}); toast('Deleted','ok'); loadMenu(); }
-  catch(e) { toast(e.message,'err'); }
+function delMI(row, name) {
+  if (!confirm('Delete "'+name+'"?')) return;
+  gsr2('adminDeleteMenuItem', KEY, row).then(function(){toast('Deleted','ok');loadMenu();}).catch(function(e){toast(e.message,'err');});
 }
-async function toggleAvail(row, btn) {
-  const on = btn.classList.contains('on');
-  btn.className='tog-sm '+(on?'off':'on');
-  try { await post({action:'updateMenuItem',_row:row,available:!on}); toast('Updated','ok'); }
-  catch(e) { toast(e.message,'err'); btn.className='tog-sm '+(on?'on':'off'); }
+function toggleAvail(btn) {
+  var on = btn.classList.contains('on'), row = parseInt(btn.getAttribute('data-row'));
+  btn.className = 'tog-sm '+(on?'off':'on');
+  gsr2('adminSaveMenuItem', KEY, JSON.stringify({_row:row,available:!on})).then(function(){
+    toast('Updated','ok');
+  }).catch(function(e){
+    toast(e.message,'err'); btn.className='tog-sm '+(on?'on':'off');
+  });
 }
 
-// OFFERS
-async function loadOffers() {
+function loadOffers() {
   document.getElementById('offersBody').innerHTML = '<tr><td colspan="7" class="empty"><div class="spin"></div></td></tr>';
-  try { offersAll = await get('offers-admin'); renderOffers(); }
-  catch(e) { document.getElementById('offersBody').innerHTML = `<tr><td colspan="7" class="empty">${e.message}</td></tr>`; }
+  return gsr1('adminGetOffers', KEY).then(function(d){offersAll=d;renderOffers();}).catch(function(e){
+    document.getElementById('offersBody').innerHTML='<tr><td colspan="7" class="empty">'+e.message+'</td></tr>';
+  });
 }
 function renderOffers() {
-  const now = new Date();
-  const active = offersAll.filter(o=>o.active&&(!o.valid_to||new Date(o.valid_to)>=now));
+  var now = new Date();
+  var active = offersAll.filter(function(o){return o.active&&(!o.valid_to||new Date(o.valid_to)>=now);});
   document.getElementById('ofAct').textContent=active.length;
   document.getElementById('ofExp').textContent=offersAll.length-active.length;
   document.getElementById('ofTot').textContent=offersAll.length;
-  document.getElementById('offersBody').innerHTML = offersAll.length===0
-    ? '<tr><td colspan="7" class="empty">No offers yet</td></tr>'
-    : offersAll.map(o=>{
-        const isAct = o.active && (!o.valid_to||new Date(o.valid_to)>=now);
-        return `<tr>
-          <td><b style="font-size:15px">${o.code}</b></td>
-          <td><b style="color:var(--red);font-size:18px">${o.type==='percent'?o.value+'%':'R$'+o.value}</b></td>
-          <td style="color:var(--muted)">${o.type==='percent'?'Percentage':'Fixed'}</td>
-          <td style="color:var(--muted);font-size:12px">${o.valid_to||'No expiry'}</td>
-          <td style="color:var(--muted)">R$${o.min_order||'0'}</td>
-          <td><span class="badge" style="background:${isAct?'rgba(46,125,50,.1)':'rgba(0,0,0,.06)'};color:${isAct?'var(--green)':'var(--muted)'}">${isAct?'Active':'Expired'}</span></td>
-          <td><div class="axb"><button class="bx bx-e" onclick='openOF(${JSON.stringify(o)})'>Edit</button><button class="bx bx-d" onclick="delOF(${o._row},'${o.code}')">Delete</button></div></td>
-        </tr>`;
-      }).join('');
+  if(offersAll.length===0){document.getElementById('offersBody').innerHTML='<tr><td colspan="7" class="empty">No offers yet</td></tr>';return;}
+  var html='';
+  for(var i=0;i<offersAll.length;i++){
+    var o=offersAll[i];
+    var isAct=o.active&&(!o.valid_to||new Date(o.valid_to)>=now);
+    var disc=o.type==='percent'?o.value+'%':'R$'+o.value;
+    var bg=isAct?'rgba(46,125,50,.1)':'rgba(0,0,0,.06)';
+    var col=isAct?'var(--green)':'var(--muted)';
+    html+='<tr><td><b style="font-size:15px">'+o.code+'</b></td>';
+    html+='<td><b style="color:var(--red);font-size:18px">'+disc+'</b></td>';
+    html+='<td style="color:var(--muted)">'+(o.type==='percent'?'Percentage':'Fixed')+'</td>';
+    html+='<td style="color:var(--muted);font-size:12px">'+(o.valid_to||'No expiry')+'</td>';
+    html+='<td style="color:var(--muted)">R$'+(o.min_order||'0')+'</td>';
+    html+='<td><span class="badge" style="background:'+bg+';color:'+col+'">'+(isAct?'Active':'Expired')+'</span></td>';
+    html+='<td><div class="axb"><button class="bx bx-e" data-edit-of="'+i+'">Edit</button>';
+    html+='<button class="bx bx-d" data-del-of data-row="'+o._row+'" data-code="'+o.code+'">Delete</button></div></td></tr>';
+  }
+  document.getElementById('offersBody').innerHTML=html;
 }
 function openOF(o) {
-  editOFRow = o?o._row:null;
-  document.getElementById('ofTitle').textContent=o?'Edit Offer':'New Offer';
-  document.getElementById('of-code').value=o?.code||'';
-  document.getElementById('of-type').value=o?.type||'percent';
-  document.getElementById('of-val').value=o?.value||'';
-  document.getElementById('of-min').value=o?.min_order||'';
-  document.getElementById('of-from').value=o?.valid_from||'';
-  document.getElementById('of-to').value=o?.valid_to||'';
-  document.getElementById('of-desc').value=o?.description||'';
+  editOFRow = o ? o._row : null;
+  document.getElementById('ofTitle').textContent = o ? 'Edit Offer' : 'New Offer';
+  document.getElementById('of-code').value = (o && o.code) || '';
+  document.getElementById('of-type').value = (o && o.type) || 'percent';
+  document.getElementById('of-val').value = (o && o.value) || '';
+  document.getElementById('of-min').value = (o && o.min_order) || '';
+  document.getElementById('of-from').value = (o && o.valid_from) || '';
+  document.getElementById('of-to').value = (o && o.valid_to) || '';
+  document.getElementById('of-desc').value = (o && o.description) || '';
   document.getElementById('moOF').classList.add('open');
 }
-async function saveOF() {
-  try {
-    await post({action:editOFRow?'updateOffer':'addOffer',_row:editOFRow,
-      code:document.getElementById('of-code').value.toUpperCase(),
-      type:document.getElementById('of-type').value,
-      value:parseFloat(document.getElementById('of-val').value),
-      min_order:parseFloat(document.getElementById('of-min').value)||0,
-      valid_from:document.getElementById('of-from').value,
-      valid_to:document.getElementById('of-to').value,
-      description:document.getElementById('of-desc').value,
-      active:true,
-    });
+function saveOF() {
+  var d = {_row:editOFRow,
+    code:document.getElementById('of-code').value.toUpperCase(),
+    type:document.getElementById('of-type').value,
+    value:parseFloat(document.getElementById('of-val').value),
+    min_order:parseFloat(document.getElementById('of-min').value)||0,
+    valid_from:document.getElementById('of-from').value,
+    valid_to:document.getElementById('of-to').value,
+    description:document.getElementById('of-desc').value,
+    active:true
+  };
+  gsr2('adminSaveOffer', KEY, JSON.stringify(d)).then(function(){
     toast('Offer saved','ok'); closeMo('moOF'); loadOffers();
-  } catch(e) { toast(e.message,'err'); }
+  }).catch(function(e){toast(e.message,'err');});
 }
-async function delOF(row,code) {
-  if (!confirm(`Delete "${code}"?`)) return;
-  try { await post({action:'deleteOffer',_row:row}); toast('Deleted','ok'); loadOffers(); }
-  catch(e) { toast(e.message,'err'); }
+function delOF(row, code) {
+  if (!confirm('Delete "'+code+'"?')) return;
+  gsr2('adminDeleteOffer', KEY, row).then(function(){toast('Deleted','ok');loadOffers();}).catch(function(e){toast(e.message,'err');});
 }
 
-// REVIEWS
-async function loadReviews() {
+function loadReviews() {
   document.getElementById('revBody').innerHTML='<tr><td colspan="5" class="empty"><div class="spin"></div></td></tr>';
-  try { revAll = await get('reviews-admin'); renderRevs(); }
-  catch(e) { document.getElementById('revBody').innerHTML=`<tr><td colspan="5" class="empty">${e.message}</td></tr>`; }
+  return gsr1('adminGetReviews', KEY).then(function(d){revAll=d;renderRevs();}).catch(function(e){
+    document.getElementById('revBody').innerHTML='<tr><td colspan="5" class="empty">'+e.message+'</td></tr>';
+  });
 }
 function renderRevs() {
-  const d = revAll.filter(r=>(r.status||'pending')===revF);
-  document.getElementById('revBody').innerHTML = d.length===0
-    ? `<tr><td colspan="5" class="empty">No ${revF} reviews</td></tr>`
-    : d.map(r=>`<tr>
-        <td><b>${r.customer_name||'Anonymous'}</b></td>
-        <td>${'⭐'.repeat(Math.min(5,parseInt(r.rating||5)))}</td>
-        <td style="color:var(--muted);max-width:300px">${r.comment||'—'}</td>
-        <td style="color:var(--muted);font-size:12px">${fmtDate(r.created_at)}</td>
-        <td><div class="axb">${revF==='pending'?`<button class="bx bx-a" onclick="actRev('${r.review_id||r.id}','approved')">Approve</button><button class="bx bx-d" onclick="actRev('${r.review_id||r.id}','rejected')">Reject</button>`:'—'}</div></td>
-      </tr>`).join('');
+  var d=revAll.filter(function(r){return (r.status||'pending')===revF;});
+  if(d.length===0){document.getElementById('revBody').innerHTML='<tr><td colspan="5" class="empty">No '+revF+' reviews</td></tr>';return;}
+  var html='';
+  for(var i=0;i<d.length;i++){
+    var r=d[i];
+    var stars=''; for(var s=0;s<Math.min(5,parseInt(r.rating||5));s++) stars+='*';
+    html+='<tr><td><b>'+(r.customer_name||'Anonymous')+'</b></td><td>'+stars+'</td>';
+    html+='<td style="color:var(--muted);max-width:300px">'+(r.comment||'-')+'</td>';
+    html+='<td style="color:var(--muted);font-size:12px">'+fmtDate(r.created_at)+'</td>';
+    html+='<td><div class="axb">';
+    if(revF==='pending'){
+      var rid=r.review_id||r.id||'';
+      html+='<button class="bx bx-a" data-act-rev data-rid="'+rid+'" data-st="approved">Approve</button>';
+      html+='<button class="bx bx-d" data-act-rev data-rid="'+rid+'" data-st="rejected">Reject</button>';
+    } else html+='-';
+    html+='</div></td></tr>';
+  }
+  document.getElementById('revBody').innerHTML=html;
 }
-function sRev(f,el){revF=f;document.querySelectorAll('#s-reviews .fb').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderRevs();}
-async function actRev(id,status) {
-  try { await post({action:'updateReview',review_id:id,status}); toast('Review '+status,'ok'); loadReviews(); }
-  catch(e) { toast(e.message,'err'); }
+function sRev(f,el){revF=f;var bs=document.querySelectorAll('#s-reviews .fb');for(var i=0;i<bs.length;i++)bs[i].classList.remove('active');el.classList.add('active');renderRevs();}
+function actRev(id, status) {
+  gsr3('adminUpdateReview',KEY,id,status).then(function(){toast('Review '+status,'ok');loadReviews();}).catch(function(e){toast(e.message,'err');});
 }
 
-// SETTINGS
-async function loadSettings() {
+function loadSettings() {
   document.getElementById('settGrid').innerHTML='<div class="empty"><div class="spin"></div></div>';
-  try {
-    const s = await get('settings');
-    const isOpen = s.is_open==='true'||s.is_open===true;
+  gsr1('adminGetSettings',KEY).then(function(s){
+    var isOpen=s.is_open==='true'||s.is_open===true;
     document.getElementById('openTog').className='tog '+(isOpen?'on':'off');
-    document.getElementById('openLbl').textContent=isOpen?'🟢 Restaurant Open':'🔴 Restaurant Closed';
-    document.getElementById('settGrid').innerHTML=`
-      <div class="scard">
-        <h3>🚴 Delivery</h3>
-        ${srow('delivery_fee','Delivery Fee (R$)',s.delivery_fee)}
-        ${srow('free_delivery_above','Free Delivery Above (R$)',s.free_delivery_above)}
-        ${srow('estimated_delivery_min','Est. Delivery Time (min)',s.estimated_delivery_min)}
-        ${srow('estimated_pickup_min','Est. Pickup Time (min)',s.estimated_pickup_min)}
-        <button class="btn btn-primary" style="margin-top:14px" onclick="saveS(['delivery_fee','free_delivery_above','estimated_delivery_min','estimated_pickup_min'])">Save</button>
-      </div>
-      <div class="scard">
-        <h3>🎁 Loyalty</h3>
-        ${srow('loyalty_points_per_real','Points per R$1',s.loyalty_points_per_real||'1')}
-        ${srow('loyalty_min_redeem','Min points to redeem',s.loyalty_min_redeem||'100')}
-        ${srow('loyalty_redeem_rate','Points per R$5',s.loyalty_redeem_rate||'100')}
-        <button class="btn btn-primary" style="margin-top:14px" onclick="saveS(['loyalty_points_per_real','loyalty_min_redeem','loyalty_redeem_rate'])">Save</button>
-      </div>
-      <div class="scard" style="grid-column:1/-1">
-        <h3>📍 Restaurant Location</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
-          ${srow('address_street','Street Address',s.address_street)}
-          ${srow('address_city','City',s.address_city)}
-          ${srow('address_postal','Postal Code',s.address_postal)}
-          ${srow('address_state','State',s.address_state)}
-          ${srow('delivery_radius_km','Delivery Radius (km)',s.delivery_radius_km||'10')}
-          ${srow('maps_embed_url','Google Maps Embed URL',s.maps_embed_url)}
-        </div>
-        ${s.maps_embed_url?`<iframe class="map-frame" src="${s.maps_embed_url}" allowfullscreen loading="lazy" style="border:none"></iframe>`:
-          `<div class="map-frame" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">
-            Paste a Google Maps embed URL above to see preview<br><small>maps.google.com → Share → Embed a map → copy src="..." value</small>
-          </div>`}
-        <div style="display:flex;gap:10px;margin-top:14px">
-          <button class="btn btn-primary" onclick="saveS(['address_street','address_city','address_postal','address_state','delivery_radius_km','maps_embed_url'])">Save Location</button>
-          ${s.maps_embed_url?`<a href="${s.maps_embed_url.replace('output=embed','')}" target="_blank" class="btn btn-outline">🗺 Open in Maps</a>`:''}
-        </div>
-      </div>`;
-  } catch(e) { document.getElementById('settGrid').innerHTML=`<div class="empty">${e.message}</div>`; }
+    document.getElementById('openLbl').textContent=isOpen?'Restaurant Open':'Restaurant Closed';
+    var html='<div class="scard"><h3>Delivery</h3>';
+    html+=srow('delivery_fee','Delivery Fee (R$)',s.delivery_fee);
+    html+=srow('free_delivery_above','Free Delivery Above (R$)',s.free_delivery_above);
+    html+=srow('estimated_delivery_min','Est. Delivery (min)',s.estimated_delivery_min);
+    html+=srow('estimated_pickup_min','Est. Pickup (min)',s.estimated_pickup_min);
+    html+='<button class="btn btn-primary" style="margin-top:14px" onclick="saveS([\'delivery_fee\',\'free_delivery_above\',\'estimated_delivery_min\',\'estimated_pickup_min\'])">Save</button></div>';
+    html+='<div class="scard"><h3>Loyalty</h3>';
+    html+=srow('loyalty_points_per_real','Points per R$1',s.loyalty_points_per_real||'1');
+    html+=srow('loyalty_min_redeem','Min to redeem',s.loyalty_min_redeem||'100');
+    html+=srow('loyalty_redeem_rate','Points per R$5',s.loyalty_redeem_rate||'100');
+    html+='<button class="btn btn-primary" style="margin-top:14px" onclick="saveS([\'loyalty_points_per_real\',\'loyalty_min_redeem\',\'loyalty_redeem_rate\'])">Save</button></div>';
+    html+='<div class="scard" style="grid-column:1/-1"><h3>Restaurant Location</h3>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">';
+    html+=srow('address_street','Street Address',s.address_street);
+    html+=srow('address_city','City',s.address_city);
+    html+=srow('address_postal','Postal Code',s.address_postal);
+    html+=srow('address_state','State',s.address_state);
+    html+=srow('delivery_radius_km','Delivery Radius (km)',s.delivery_radius_km||'10');
+    html+=srow('maps_embed_url','Google Maps Embed URL',s.maps_embed_url);
+    html+='</div>';
+    if(s.maps_embed_url) html+='<iframe class="map-frame" src="'+s.maps_embed_url+'" allowfullscreen loading="lazy" style="border:none"></iframe>';
+    else html+='<div class="map-frame" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">Paste a Google Maps embed URL above to see preview</div>';
+    html+='<div style="display:flex;gap:10px;margin-top:14px">';
+    html+='<button class="btn btn-primary" onclick="saveS([\'address_street\',\'address_city\',\'address_postal\',\'address_state\',\'delivery_radius_km\',\'maps_embed_url\'])">Save Location</button>';
+    html+='</div></div>';
+    document.getElementById('settGrid').innerHTML=html;
+  }).catch(function(e){document.getElementById('settGrid').innerHTML='<div class="empty">'+e.message+'</div>';});
 }
-function srow(k,label,val){return`<div class="sr"><div><div class="sl">${label}</div></div><input class="sinp" id="s-${k}" value="${val||''}"></div>`;}
-async function saveS(keys) {
-  try {
-    for(const k of keys){const v=document.getElementById('s-'+k)?.value;if(v!==undefined)await post({action:'updateSetting',key:k,value:v});}
-    toast('Saved','ok'); loadSettings();
-  } catch(e) { toast(e.message,'err'); }
+function srow(k,label,val){return '<div class="sr"><div><div class="sl">'+label+'</div></div><input class="sinp" id="s-'+k+'" value="'+(val||'')+'"></div>';}
+function saveS(keys) {
+  var ps=[];
+  for(var i=0;i<keys.length;i++){
+    var el=document.getElementById('s-'+keys[i]);
+    if(el) ps.push(gsr3('adminUpdateSetting',KEY,keys[i],el.value));
+  }
+  Promise.all(ps).then(function(){toast('Saved','ok');loadSettings();}).catch(function(e){toast(e.message,'err');});
 }
-async function toggleOpen() {
-  const isOpen = document.getElementById('openTog').classList.contains('on');
-  try { await post({action:'updateSetting',key:'is_open',value:String(!isOpen)}); toast(isOpen?'Restaurant closed':'Restaurant opened','ok'); loadSettings(); }
-  catch(e) { toast(e.message,'err'); }
+function toggleOpen() {
+  var isOpen=document.getElementById('openTog').classList.contains('on');
+  gsr3('adminUpdateSetting',KEY,'is_open',String(!isOpen)).then(function(){
+    toast(isOpen?'Restaurant closed':'Restaurant opened','ok'); loadSettings();
+  }).catch(function(e){toast(e.message,'err');});
 }
 
-// MODALS
 function closeMo(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+var mos=document.querySelectorAll('.mo');
+for(var i=0;i<mos.length;i++){mos[i].addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});}
 
-// UTILS
+// Event delegation for all dynamically generated buttons
+document.body.addEventListener('click', function(e) {
+  var t = e.target;
+  if (!t) return;
+  // Kanban advance
+  if (t.hasAttribute('data-adv')) { adv(t.getAttribute('data-id'), t.getAttribute('data-next')); return; }
+  // Menu
+  if (t.hasAttribute('data-edit-mi')) { openMI(menuAll[parseInt(t.getAttribute('data-edit-mi'))]); return; }
+  if (t.hasAttribute('data-del-mi')) { delMI(parseInt(t.getAttribute('data-row')), t.getAttribute('data-name')); return; }
+  if (t.hasAttribute('data-avail')) { toggleAvail(t); return; }
+  // Offers
+  if (t.hasAttribute('data-edit-of')) { openOF(offersAll[parseInt(t.getAttribute('data-edit-of'))]); return; }
+  if (t.hasAttribute('data-del-of')) { delOF(parseInt(t.getAttribute('data-row')), t.getAttribute('data-code')); return; }
+  // History
+  if (t.hasAttribute('data-view-ord')) { viewOrd(parseInt(t.getAttribute('data-view-ord'))); return; }
+  // Reviews
+  if (t.hasAttribute('data-act-rev')) { actRev(t.getAttribute('data-rid'), t.getAttribute('data-st')); return; }
+});
+
 function cap(s){return s?s.charAt(0).toUpperCase()+s.replace(/_/g,' ').slice(1):'';}
-function fmtItems(j){try{const a=typeof j==='string'?JSON.parse(j):j;return Array.isArray(a)?a.map(i=>`${i.qty}× ${i.name}`).join(', '):(j||'—');}catch{return j||'—';}}
-function fmtDate(d){if(!d)return'—';try{return new Date(d).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return d;}}
-function ago(d){if(!d)return'';const m=Math.round((Date.now()-new Date(d))/60000);return m<1?'just now':m<60?m+'m ago':Math.round(m/60)+'h ago';}
-function sbadge(s){const C={received:'#FF9800',preparing:'#7B40CC',baking:'#E65100',ready:'#2E7D32',out_for_delivery:'#1A66DB',completed:'#546E7A',cancelled:'#C62828'};const c=C[s]||'#999';return`<span class="badge" style="background:${c}1a;color:${c}">${cap(s)}</span>`;}
+function fmtItems(j){try{var a=typeof j==='string'?JSON.parse(j):j;if(Array.isArray(a))return a.map(function(i){return i.qty+'x '+i.name;}).join(', ');return j||'-';}catch(e){return j||'-';}}
+function fmtDate(d){if(!d)return'-';try{return new Date(d).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return d;}}
+function ago(d){if(!d)return'';var m=Math.round((Date.now()-new Date(d))/60000);return m<1?'just now':m<60?m+'m ago':Math.round(m/60)+'h ago';}
+function sbadge(s){var C={pending:'#E53935',received:'#FF9800',preparing:'#7B40CC',baking:'#E65100',ready:'#2E7D32',out_for_delivery:'#1A66DB',completed:'#546E7A',cancelled:'#C62828'};var c=C[s]||'#999';return '<span class="badge" style="background:'+c+'1a;color:'+c+'">'+cap(s)+'</span>';}
 </script>
 </body>
 </html>

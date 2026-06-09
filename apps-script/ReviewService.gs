@@ -1,6 +1,6 @@
 const ReviewService = {
   submit(data) {
-    ['customer_name', 'order_id', 'rating'].forEach(f => {
+    ['customer_name', 'rating'].forEach(f => {
       if (!data[f]) throw new Error(`Missing field: ${f}`);
     });
     if (data.rating < 1 || data.rating > 5) throw new Error('Rating must be 1–5');

@@ -127,6 +127,83 @@ function doPost(e) {
   }
 }
 
+// ─── google.script.run admin functions ───────────────────────────────────────
+// Called from admin.html via google.script.run (no api_key param needed —
+// key is verified server-side by adminCheck).
+
+function adminCheck(key) {
+  try { Auth.requireStaffKey(key); return true; } catch(_) { return false; }
+}
+
+function adminGetActiveOrders(key) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(OrderService.getActive());
+}
+
+function adminGetAllOrders(key) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(OrderService.getAll());
+}
+
+function adminGetMenu(key) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(MenuService.getAllItems());
+}
+
+function adminGetOffers(key) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(OffersService.getAllOffers());
+}
+
+function adminGetReviews(key) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(ReviewService.getAll());
+}
+
+function adminGetSettings(key) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(SettingsService.getAll());
+}
+
+function adminUpdateStatus(key, order_id, status) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(OrderService.updateStatus(order_id, status));
+}
+
+function adminSaveMenuItem(key, data) {
+  Auth.requireStaffKey(key);
+  const d = JSON.parse(data);
+  if (d._row) return JSON.stringify(MenuService.updateItem(d._row, d));
+  return JSON.stringify(MenuService.addItem(d));
+}
+
+function adminDeleteMenuItem(key, row) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(MenuService.deleteItem(row));
+}
+
+function adminSaveOffer(key, data) {
+  Auth.requireStaffKey(key);
+  const d = JSON.parse(data);
+  if (d._row) return JSON.stringify(OffersService.updateOffer(d._row, d));
+  return JSON.stringify(OffersService.addOffer(d));
+}
+
+function adminDeleteOffer(key, row) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(OffersService.deleteOffer(row));
+}
+
+function adminUpdateReview(key, review_id, status) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(ReviewService.updateStatus(review_id, status));
+}
+
+function adminUpdateSetting(key, k, v) {
+  Auth.requireStaffKey(key);
+  return JSON.stringify(SettingsService.update(k, v));
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function ok(data) {

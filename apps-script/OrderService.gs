@@ -98,7 +98,7 @@ const OrderService = {
   },
 
   updateStatus(order_id, status) {
-    const VALID = ['received', 'preparing', 'baking', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
+    const VALID = ['pending', 'received', 'preparing', 'baking', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
     if (!VALID.includes(status)) throw new Error(`Invalid status. Must be one of: ${VALID.join(', ')}`);
 
     const sheet   = Utils.getSheet('Orders');
