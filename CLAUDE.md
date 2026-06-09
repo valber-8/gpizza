@@ -10,6 +10,8 @@ GPizza is a pizza restaurant mobile ordering system. Customers use a React Nativ
 
 ```
 apps-script/   ← Google Apps Script backend (deployed as Web App)
+apps-script/tests/  ← API integration tests (node --test)
+flutter/       ← Flutter web customer app (deployed to Firebase Hosting, embedded in Google Sites)
 mobile/        ← Expo React Native customer app
 sheets/        ← Spreadsheet setup guide and seed data
 sites/         ← Copy/content for the Google Sites public showcase
@@ -32,13 +34,15 @@ sites/         ← Copy/content for the Google Sites public showcase
 > Every code change requires a new deployment version. Go to **Deploy → Manage Deployments → Edit → New version** to push updates.
 
 ### Architecture
-- `Code.gs` — routes `doGet`/`doPost` by `action` parameter; all responses are `{ ok, data }` or `{ ok, error }`.
-- `MenuService.gs` — reads `categories` + `menu` sheets; injects Drive image URLs.
-- `OffersService.gs` — filters active offers by date; validates promo codes and calculates discounts.
-- `OrderService.gs` — writes new order rows, updates status, delegates Task creation to `TasksService`.
+- `Code.gs` — routes `doGet`/`doPost` by `action` parameter; serves `admin.html` when no `action` param; exposes `adminXxx()` functions for `google.script.run`; all responses are `{ ok, data }` or `{ ok, error }`.
+- `MenuService.gs` — reads `Menu` sheet; injects Drive image URLs. `getAllItems()` returns rows with `_row` for CRUD.
+- `OffersService.gs` — filters active offers by date; validates promo codes and calculates discounts. `getAllOffers()` for admin.
+- `OrderService.gs` — writes new order rows (`status: 'received'`), updates status, delegates Task creation to `TasksService`. `getActive()` returns non-terminal orders; `getAll()` returns all orders newest-first.
+- `ReviewService.gs` — `order_id` is optional on submit; moderated via `updateStatus`.
 - `TasksService.gs` — one Google Tasks list per day (`Orders — YYYY-MM-DD`), one task per order.
 - `Config.gs` — reads Script Properties (never hardcode IDs here).
 - `Utils.gs` — shared helpers: `getSheet()`, `sheetToObjects()`, `generateOrderId()`, `toISOString()`.
+- `admin.html` — single-file admin panel served by HTML Service. Communicates with the server exclusively via `google.script.run` (not `fetch`). All JS is ES5 — no template literals, no optional chaining, no arrow functions in dynamic HTML — due to Apps Script NATIVE sandbox restrictions. Event handlers in dynamic HTML use `data-*` attributes + a single `document.body` event delegation listener (CSP blocks inline `onclick` in `innerHTML`).
 
 ### API Reference
 
@@ -58,12 +62,17 @@ sites/         ← Copy/content for the Google Sites public showcase
 | action | Auth | Description |
 |--------|------|-------------|
 | `order` | none | Place order → upserts Customer → Sheets row → Tasks task |
-| `review` | none | Submit review (lands as `pending`) |
+| `review` | none | Submit review (`order_id` optional); lands as `pending` |
 | `applyOffer` | none | Validate promo code, returns `{ discount, final_total }` |
 | `redeemPoints` | none | Deduct points, returns `{ discount, points_used, remaining }` |
 | `order-status-update` | `api_key` | Kitchen: advance order through status pipeline |
 | `updateReview` | `api_key` | Approve or reject a pending review |
 | `updateSetting` | `api_key` | Update a Settings row value (e.g. flip `is_open`) |
+| `addMenuItem` / `updateMenuItem` / `deleteMenuItem` | `api_key` | Menu CRUD |
+| `addOffer` / `updateOffer` / `deleteOffer` | `api_key` | Offer CRUD |
+
+**Admin panel** — `google.script.run` functions (called from `admin.html`, key passed as first arg):
+`adminCheck`, `adminGetActiveOrders`, `adminGetAllOrders`, `adminGetMenu`, `adminGetOffers`, `adminGetReviews`, `adminGetSettings`, `adminUpdateStatus`, `adminSaveMenuItem`, `adminDeleteMenuItem`, `adminSaveOffer`, `adminDeleteOffer`, `adminUpdateReview`, `adminUpdateSetting`.
 
 ### Loyalty Points System
 
@@ -73,6 +82,31 @@ Defined in `LoyaltyService.gs`. Constants (change there to tune):
 - **Column**: `loyalty_points` in the `Customers` tab
 
 To redeem at checkout, include `redeem_points: <number>` in the `order` POST body — the discount is applied before the order total is calculated. The response includes `points_used`, `points_earned`, and `customer_id`.
+
+---
+
+## Flutter Web App
+
+Customer-facing web app deployed to Firebase Hosting and embedded in Google Sites at `sites.google.com/view/gpizza`.
+
+```bash
+cd flutter
+flutter build web --release
+firebase deploy --only hosting
+```
+
+- API URL is in `flutter/lib/config/api_config.dart` (`ApiConfig.baseUrl`).
+- `flutter/lib/firebase_options.dart` and `flutter/web/firebase-messaging-sw.js` are gitignored — contain real Firebase API keys, never commit.
+
+---
+
+## Testing
+
+```bash
+node --test apps-script/tests/api.test.js
+```
+
+Integration tests in `apps-script/tests/api.test.js` hit the live deployment (no mocks, no dependencies). Requires Node 18+. Covers all GET/POST endpoints: menu, offers, settings, reviews, order (place + retrieve), loyalty, review submit, applyOffer, error paths.
 
 ---
 
@@ -129,7 +163,7 @@ npm run lint       # ESLint
 
 `items_json` is a JSON string `[{ id, name, qty, unit_price }]`.
 
-Valid `status` values: `pending → confirmed → preparing → ready → delivered` (or `cancelled`).
+Valid `status` values (pipeline): `pending → received → preparing → baking → ready → out_for_delivery → completed` (or `cancelled`). New orders are written with `received`; orders arriving via older deployments may have `pending` — the admin kanban handles both.
 
 **`is_open` setting**: set to `false` in the Settings tab to display a closed banner in the app. Checked via `SettingsService.isOpen()`.
 
