@@ -1,6 +1,10 @@
 # Firebase service account keys
 *-adminsdk-*.json
 
+# Firebase config with real API keys (use .example files as templates)
+flutter/lib/firebase_options.dart
+flutter/web/firebase-messaging-sw.js
+
 # Claude Code local settings
 .claude/
 

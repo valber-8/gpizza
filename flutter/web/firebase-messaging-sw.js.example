@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: 'FIREBASE_WEB_API_KEY',
+  apiKey: 'YOUR_FIREBASE_WEB_API_KEY',
   authDomain: 'gpizza-firebase.firebaseapp.com',
   projectId: 'gpizza-firebase',
   storageBucket: 'gpizza-firebase.firebasestorage.app',

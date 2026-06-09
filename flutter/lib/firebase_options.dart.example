@@ -41,7 +41,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'FIREBASE_WEB_API_KEY',
+    apiKey: 'YOUR_FIREBASE_API_KEY',
     appId: '1:52545957572:web:a83ddd26627607db20a391',
     messagingSenderId: '52545957572',
     projectId: 'gpizza-firebase',
@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'FIREBASE_ANDROID_API_KEY',
+    apiKey: 'YOUR_FIREBASE_API_KEY',
     appId: '1:52545957572:android:27e8d09d58c7cb1d20a391',
     messagingSenderId: '52545957572',
     projectId: 'gpizza-firebase',
@@ -59,7 +59,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'FIREBASE_IOS_API_KEY',
+    apiKey: 'YOUR_FIREBASE_API_KEY',
     appId: '1:52545957572:ios:c0cf7b6ab316684520a391',
     messagingSenderId: '52545957572',
     projectId: 'gpizza-firebase',
@@ -68,7 +68,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'FIREBASE_IOS_API_KEY',
+    apiKey: 'YOUR_FIREBASE_API_KEY',
     appId: '1:52545957572:ios:c0cf7b6ab316684520a391',
     messagingSenderId: '52545957572',
     projectId: 'gpizza-firebase',
@@ -77,7 +77,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'FIREBASE_WEB_API_KEY',
+    apiKey: 'YOUR_FIREBASE_API_KEY',
     appId: '1:52545957572:web:909507d22658d94920a391',
     messagingSenderId: '52545957572',
     projectId: 'gpizza-firebase',
