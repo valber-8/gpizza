@@ -106,13 +106,18 @@ class NotificationService {
     }
   }
 
+  static String? _cachedToken;
+
   // Returns null if Firebase isn't configured or permission was denied.
   // On web, pass your VAPID public key from Firebase Console →
   //   Project Settings → Cloud Messaging → Web Push certificates.
+  // Subsequent calls without vapidKey return the cached token.
   static Future<String?> getToken({String? vapidKey}) async {
     if (!_ready) return null;
+    if (_cachedToken != null) return _cachedToken;
     try {
-      return await FirebaseMessaging.instance.getToken(vapidKey: vapidKey);
+      _cachedToken = await FirebaseMessaging.instance.getToken(vapidKey: vapidKey);
+      return _cachedToken;
     } catch (e) {
       debugPrint('FCM getToken error: $e');
       return null;
