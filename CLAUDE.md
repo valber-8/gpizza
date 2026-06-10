@@ -91,12 +91,22 @@ Customer-facing web app deployed to Firebase Hosting and embedded in Google Site
 
 ```bash
 cd flutter
-flutter build web --release
+flutter build web --release --dart-define=VAPID_KEY=<key>
 firebase deploy --only hosting
 ```
 
-- API URL is in `flutter/lib/config/api_config.dart` (`ApiConfig.baseUrl`).
+VAPID key: Firebase Console → gpizza-firebase → Project Settings → Cloud Messaging → Web Push certificates → Key pair.
+
+- API URL: `flutter/lib/config/api_config.dart` (`ApiConfig.baseUrl`).
 - `flutter/lib/firebase_options.dart` and `flutter/web/firebase-messaging-sw.js` are gitignored — contain real Firebase API keys, never commit.
+- Flutter binary: `/home/valber/build/flutter/bin/flutter`
+
+### FCM / Push notifications
+
+- FCM credentials (`FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY`) are stored in Apps Script Script Properties — never in code.
+- `NotificationService` caches the FCM token after the first `getToken(vapidKey:)` call in `main.dart`; subsequent calls (e.g. from checkout) return the cached value.
+- `flutter_local_notifications` is skipped on web (`kIsWeb` guard) — it has no web support and its `initialize()` would throw, silently preventing FCM from loading.
+- **Google Sites iframe limitation**: `Notification.requestPermission()` is blocked in iframes without `allow="notifications"` on the `<iframe>` tag. Google Sites does not set this, so push notifications do not work when the app is embedded. The app degrades gracefully — orders and status tracking (polling every 30 s) work normally. Push works when accessing `gpizza-firebase.web.app` directly.
 
 ---
 
