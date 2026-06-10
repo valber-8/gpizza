@@ -21,36 +21,38 @@ class NotificationService {
   // Called once from main() after Firebase.initializeApp().
   static Future<void> initialize({required void Function(String orderId) onTap}) async {
     try {
-      // ── Android notification channel ───────────────────────────────────────
-      if (!kIsWeb && Platform.isAndroid) {
-        await _localNotifications
-            .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
-            ?.createNotificationChannel(
-              const AndroidNotificationChannel(
-                _channelId,
-                _channelName,
-                description: _channelDesc,
-                importance: Importance.high,
-              ),
-            );
-      }
+      if (!kIsWeb) {
+        // ── Android notification channel ─────────────────────────────────────
+        if (Platform.isAndroid) {
+          await _localNotifications
+              .resolvePlatformSpecificImplementation<
+                  AndroidFlutterLocalNotificationsPlugin>()
+              ?.createNotificationChannel(
+                const AndroidNotificationChannel(
+                  _channelId,
+                  _channelName,
+                  description: _channelDesc,
+                  importance: Importance.high,
+                ),
+              );
+        }
 
-      // ── Local-notifications init (foreground display + tap routing) ────────
-      await _localNotifications.initialize(
-        const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          iOS: DarwinInitializationSettings(
-            requestAlertPermission: false,
-            requestBadgePermission: false,
-            requestSoundPermission: false,
+        // ── Local-notifications init (foreground display + tap routing) ──────
+        await _localNotifications.initialize(
+          const InitializationSettings(
+            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+            iOS: DarwinInitializationSettings(
+              requestAlertPermission: false,
+              requestBadgePermission: false,
+              requestSoundPermission: false,
+            ),
           ),
-        ),
-        onDidReceiveNotificationResponse: (response) {
-          final id = response.payload;
-          if (id != null && id.isNotEmpty) onTap(id);
-        },
-      );
+          onDidReceiveNotificationResponse: (response) {
+            final id = response.payload;
+            if (id != null && id.isNotEmpty) onTap(id);
+          },
+        );
+      }
 
       // ── Request permission ─────────────────────────────────────────────────
       await FirebaseMessaging.instance.requestPermission(
@@ -62,30 +64,32 @@ class NotificationService {
       // ── Background handler (must be top-level) ─────────────────────────────
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-      // ── Foreground: show local notification ────────────────────────────────
-      FirebaseMessaging.onMessage.listen((msg) {
-        final n = msg.notification;
-        if (n == null) return;
-        _localNotifications.show(
-          n.hashCode,
-          n.title,
-          n.body,
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              _channelId, _channelName,
-              channelDescription: _channelDesc,
-              importance: Importance.high,
-              priority: Priority.high,
+      // ── Foreground: show local notification (native only) ──────────────────
+      if (!kIsWeb) {
+        FirebaseMessaging.onMessage.listen((msg) {
+          final n = msg.notification;
+          if (n == null) return;
+          _localNotifications.show(
+            n.hashCode,
+            n.title,
+            n.body,
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                _channelId, _channelName,
+                channelDescription: _channelDesc,
+                importance: Importance.high,
+                priority: Priority.high,
+              ),
+              iOS: DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+              ),
             ),
-            iOS: DarwinNotificationDetails(
-              presentAlert: true,
-              presentBadge: true,
-              presentSound: true,
-            ),
-          ),
-          payload: msg.data['order_id'],
-        );
-      });
+            payload: msg.data['order_id'],
+          );
+        });
+      }
 
       // ── Tap while app was backgrounded ─────────────────────────────────────
       FirebaseMessaging.onMessageOpenedApp.listen((msg) {
