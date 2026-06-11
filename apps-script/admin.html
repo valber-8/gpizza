@@ -247,7 +247,7 @@ tr:last-child td{border-bottom:none}
     <h2 id="miTitle">Add Menu Item</h2>
     <div class="fg">
       <div class="fi"><label>Name</label><input id="mi-n" placeholder="Pepperoni Pizza"></div>
-      <div class="fi"><label>Category</label><select id="mi-c"><option>Pizzas</option><option>Drinks</option><option>Sides</option><option>Desserts</option></select></div>
+      <div class="fi"><label>Category</label><input id="mi-c" list="mi-catList" placeholder="e.g. Pizzas"><datalist id="mi-catList"></datalist></div>
       <div class="fi"><label>Price (R$)</label><input id="mi-p" type="number" step="0.01" placeholder="0.00"></div>
       <div class="fi"><label>Sort Order</label><input id="mi-s" type="number" placeholder="0"></div>
     </div>
@@ -498,7 +498,14 @@ function openMI(item) {
   editMIRow = item ? item._row : null;
   document.getElementById('miTitle').textContent = item ? 'Edit Menu Item' : 'Add Menu Item';
   document.getElementById('mi-n').value = (item && item.name) || '';
-  document.getElementById('mi-c').value = (item && item.category) || 'Pizzas';
+  var dl = document.getElementById('mi-catList');
+  var seen = {}, opts = '';
+  for (var i = 0; i < menuAll.length; i++) {
+    var c = menuAll[i].category || '';
+    if (c && !seen[c]) { seen[c] = true; opts += '<option value="' + c + '">'; }
+  }
+  dl.innerHTML = opts;
+  document.getElementById('mi-c').value = (item && item.category) || '';
   document.getElementById('mi-p').value = (item && item.price) || '';
   document.getElementById('mi-s').value = (item && item.sort_order) || '';
   document.getElementById('mi-d').value = (item && item.description) || '';
