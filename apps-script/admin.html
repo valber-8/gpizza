@@ -192,13 +192,7 @@ tr:last-child td{border-bottom:none}
       <div class="tbl-card">
         <div class="tbl-bar">
           <input class="si" placeholder="🔍 Search items…" oninput="fMenu(this.value)">
-          <div style="display:flex;gap:6px">
-            <button class="fb active" onclick="sCat('',this)">All</button>
-            <button class="fb" onclick="sCat('Pizzas',this)">Pizzas</button>
-            <button class="fb" onclick="sCat('Drinks',this)">Drinks</button>
-            <button class="fb" onclick="sCat('Sides',this)">Sides</button>
-            <button class="fb" onclick="sCat('Desserts',this)">Desserts</button>
-          </div>
+          <div id="catBtns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
           <button class="btn btn-primary" style="margin-left:auto" onclick="openMI(null)">+ Add Item</button>
         </div>
         <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
@@ -458,9 +452,26 @@ function exportCSV(){
 
 function loadMenu() {
   document.getElementById('menuBody').innerHTML = '<tr><td colspan="5" class="empty"><div class="spin"></div></td></tr>';
-  return gsr1('adminGetMenu', KEY).then(function(d){menuAll=d;renderMenu();}).catch(function(e){
+  return gsr1('adminGetMenu', KEY).then(function(d){
+    menuAll = d;
+    renderCatBtns();
+    renderMenu();
+  }).catch(function(e){
     document.getElementById('menuBody').innerHTML='<tr><td colspan="5" class="empty">'+e.message+'</td></tr>';
   });
+}
+function renderCatBtns() {
+  var seen = {}, cats = [];
+  for (var i = 0; i < menuAll.length; i++) {
+    var c = menuAll[i].category || '';
+    if (c && !seen[c]) { seen[c] = true; cats.push(c); }
+  }
+  cats.sort();
+  var html = '<button class="fb' + (menuCat===''?' active':'') + '" data-cat="">All</button>';
+  for (var j = 0; j < cats.length; j++) {
+    html += '<button class="fb' + (menuCat===cats[j]?' active':'') + '" data-cat="' + cats[j] + '">' + cats[j] + '</button>';
+  }
+  document.getElementById('catBtns').innerHTML = html;
 }
 function renderMenu() {
   var d = menuAll;
@@ -481,7 +492,7 @@ function renderMenu() {
   document.getElementById('menuBody').innerHTML=html;
 }
 function fMenu(v){menuQ=v.toLowerCase();renderMenu();}
-function sCat(c,el){menuCat=c;var bs=document.querySelectorAll('#s-menu .fb');for(var i=0;i<bs.length;i++)bs[i].classList.remove('active');el.classList.add('active');renderMenu();}
+function sCat(c){menuCat=c;renderCatBtns();renderMenu();}
 
 function openMI(item) {
   editMIRow = item ? item._row : null;
@@ -678,6 +689,7 @@ document.body.addEventListener('click', function(e) {
   var t = e.target;
   if (!t) return;
   // Kanban advance
+  if (t.hasAttribute('data-cat')) { sCat(t.getAttribute('data-cat')); return; }
   if (t.hasAttribute('data-adv')) { adv(t.getAttribute('data-id'), t.getAttribute('data-next')); return; }
   // Menu
   if (t.hasAttribute('data-edit-mi')) { openMI(menuAll[parseInt(t.getAttribute('data-edit-mi'))]); return; }
