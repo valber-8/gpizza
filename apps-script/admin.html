@@ -248,7 +248,7 @@ tr:last-child td{border-bottom:none}
     <div class="fg">
       <div class="fi"><label>Name</label><input id="mi-n" placeholder="Pepperoni Pizza"></div>
       <div class="fi"><label>Category</label><input id="mi-c" list="mi-catList" placeholder="e.g. Pizzas"><datalist id="mi-catList"></datalist></div>
-      <div class="fi"><label>Price (R$)</label><input id="mi-p" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="fi"><label id="lbl-price">Price (kr)</label><input id="mi-p" type="number" step="0.01" placeholder="0.00"></div>
       <div class="fi"><label>Sort Order</label><input id="mi-s" type="number" placeholder="0"></div>
     </div>
     <div class="fg f1" style="margin-top:12px">
@@ -272,9 +272,9 @@ tr:last-child td{border-bottom:none}
     <h2 id="ofTitle">New Offer</h2>
     <div class="fg">
       <div class="fi"><label>Promo Code</label><input id="of-code" placeholder="PIZZA10" style="text-transform:uppercase"></div>
-      <div class="fi"><label>Type</label><select id="of-type"><option value="percent">Percentage (%)</option><option value="fixed">Fixed Amount (R$)</option></select></div>
+      <div class="fi"><label>Type</label><select id="of-type"><option value="percent">Percentage (%)</option><option value="fixed" id="lbl-fixed">Fixed Amount (kr)</option></select></div>
       <div class="fi"><label>Value</label><input id="of-val" type="number" step="0.01" placeholder="10"></div>
-      <div class="fi"><label>Min Order (R$)</label><input id="of-min" type="number" step="0.01" placeholder="0"></div>
+      <div class="fi"><label id="lbl-minorder">Min Order (kr)</label><input id="of-min" type="number" step="0.01" placeholder="0"></div>
       <div class="fi"><label>Valid From</label><input id="of-from" type="date"></div>
       <div class="fi"><label>Valid To</label><input id="of-to" type="date"></div>
     </div>
@@ -299,6 +299,7 @@ function gsr2(fn,a1,a2){return new Promise(function(res,rej){google.script.run.w
 function gsr3(fn,a1,a2,a3){return new Promise(function(res,rej){google.script.run.withSuccessHandler(function(r){res(typeof r==='string'?JSON.parse(r):r);}).withFailureHandler(function(e){rej(new Error(e.message||'Error'));})[fn](a1,a2,a3);});}
 
 var KEY = lsGet('gpizza_key') || '';
+var CUR = 'kr';
 var cur = 'orders', timer = null;
 var menuAll = [], histAll = [], offersAll = [], revAll = [];
 var menuCat = '', menuQ = '', histF = 'all', histQ = '', revF = 'pending';
@@ -330,7 +331,18 @@ function doSetup() {
 document.getElementById('suKey').onkeydown = function(e) { if (e.key === 'Enter') doSetup(); };
 document.getElementById('su').querySelector('button').addEventListener('click', doSetup);
 
-function boot() { loadOrders(); startTimer(); }
+function applyCurLabels() {
+  var el;
+  el = document.getElementById('lbl-price');    if(el) el.textContent = 'Price ('+CUR+')';
+  el = document.getElementById('lbl-fixed');    if(el) el.textContent = 'Fixed Amount ('+CUR+')';
+  el = document.getElementById('lbl-minorder'); if(el) el.textContent = 'Min Order ('+CUR+')';
+}
+function boot() {
+  gsr1('adminGetSettings', KEY).then(function(s) {
+    if (s && s.currency) { CUR = s.currency; applyCurLabels(); }
+  });
+  loadOrders(); startTimer();
+}
 
 var titles = {orders:'Live Orders',history:'Order History',menu:'Menu',offers:'Offers',reviews:'Reviews',settings:'Settings'};
 function go(p) {
@@ -372,7 +384,7 @@ function loadOrders() {
     document.getElementById('stActive').textContent = active.length;
     var done = orders.filter(function(o){return o.status==='completed';});
     document.getElementById('stDone').textContent = done.length;
-    document.getElementById('stRev').textContent = 'R$'+done.reduce(function(s,o){return s+parseFloat(o.total||0);},0).toFixed(0);
+    document.getElementById('stRev').textContent = CUR+done.reduce(function(s,o){return s+parseFloat(o.total||0);},0).toFixed(0);
     document.getElementById('stAvg').textContent = '~20 min';
     var pend = orders.filter(function(o){return o.status==='pending'||o.status==='received';}).length;
     var badge = document.getElementById('nbadge');
@@ -400,7 +412,7 @@ function renderKanban(orders) {
       html += '<span style="margin-left:auto;font-size:11px;color:var(--muted)">'+ago(o.created_at)+'</span></div>';
       html += '<div style="font-size:12px;margin-top:6px">'+o.customer_name+'</div>';
       html += '<div style="font-size:11px;color:var(--muted);margin:5px 0">'+fmtItems(o.items_json)+'</div>';
-      html += '<div class="oc-footer"><b style="color:var(--red)">R$'+o.total+'</b>';
+      html += '<div class="oc-footer"><b style="color:var(--red)">'+CUR+o.total+'</b>';
       if (SNEXT[o.status]) html += '<button class="adv-btn" style="background:'+color+'" data-adv data-id="'+o.order_id+'" data-next="'+SNEXT[o.status]+'">'+SBTN[o.status]+'</button>';
       html += '</div></div></div>';
     }
@@ -432,7 +444,7 @@ function renderHist() {
     var o=d[i];
     html+='<tr><td><b style="color:var(--red)">'+o.order_id+'</b></td><td>'+o.customer_name+'</td>';
     html+='<td style="color:var(--muted);font-size:12px;max-width:200px">'+fmtItems(o.items_json)+'</td>';
-    html+='<td><b>R$'+o.total+'</b></td><td>'+sbadge(o.status)+'</td>';
+    html+='<td><b>'+CUR+o.total+'</b></td><td>'+sbadge(o.status)+'</td>';
     html+='<td style="color:var(--muted);font-size:12px">'+fmtDate(o.created_at)+'</td>';
     html+='<td><button class="bx bx-e" data-view-ord="'+i+'">View</button></td></tr>';
   }
@@ -440,7 +452,7 @@ function renderHist() {
 }
 function viewOrd(idx){
   var o=histAll[idx];
-  alert('Order: '+o.order_id+'\nCustomer: '+o.customer_name+'\nTotal: R$'+o.total+'\nStatus: '+o.status+'\nAddress: '+(o.delivery_address||'Pickup')+'\nNotes: '+(o.notes||'-'));
+  alert('Order: '+o.order_id+'\nCustomer: '+o.customer_name+'\nTotal: '+CUR+o.total+'\nStatus: '+o.status+'\nAddress: '+(o.delivery_address||'Pickup')+'\nNotes: '+(o.notes||'-'));
 }
 function fHist(v){histQ=v.toLowerCase();renderHist();}
 function sHist(f,el){histF=f;var bs=document.querySelectorAll('#histFilt .fb');for(var i=0;i<bs.length;i++)bs[i].classList.remove('active');el.classList.add('active');renderHist();}
@@ -484,7 +496,7 @@ function renderMenu() {
     var avail = item.available!==false;
     html+='<tr><td><b>'+item.name+'</b>'+(item.description?'<br><span style="font-size:12px;color:var(--muted)">'+item.description+'</span>':'')+'</td>';
     html+='<td><span class="badge" style="background:var(--surface);color:var(--muted)">'+item.category+'</span></td>';
-    html+='<td><b style="color:var(--red)">R$'+item.price+'</b></td>';
+    html+='<td><b style="color:var(--red)">'+CUR+item.price+'</b></td>';
     html+='<td><button class="tog-sm '+(avail?'on':'off')+'" data-avail data-row="'+item._row+'"></button></td>';
     html+='<td><div class="axb"><button class="bx bx-e" data-edit-mi="'+i+'">Edit</button>';
     html+='<button class="bx bx-d" data-del-mi data-row="'+item._row+'" data-name="'+item.name.replace(/"/g,'&quot;')+'">Delete</button></div></td></tr>';
@@ -560,14 +572,14 @@ function renderOffers() {
   for(var i=0;i<offersAll.length;i++){
     var o=offersAll[i];
     var isAct=o.active&&(!o.valid_to||new Date(o.valid_to)>=now);
-    var disc=o.type==='percent'?o.value+'%':'R$'+o.value;
+    var disc=o.type==='percent'?o.value+'%':CUR+o.value;
     var bg=isAct?'rgba(46,125,50,.1)':'rgba(0,0,0,.06)';
     var col=isAct?'var(--green)':'var(--muted)';
     html+='<tr><td><b style="font-size:15px">'+o.code+'</b></td>';
     html+='<td><b style="color:var(--red);font-size:18px">'+disc+'</b></td>';
     html+='<td style="color:var(--muted)">'+(o.type==='percent'?'Percentage':'Fixed')+'</td>';
     html+='<td style="color:var(--muted);font-size:12px">'+(o.valid_to||'No expiry')+'</td>';
-    html+='<td style="color:var(--muted)">R$'+(o.min_order||'0')+'</td>';
+    html+='<td style="color:var(--muted)">'+CUR+(o.min_order||'0')+'</td>';
     html+='<td><span class="badge" style="background:'+bg+';color:'+col+'">'+(isAct?'Active':'Expired')+'</span></td>';
     html+='<td><div class="axb"><button class="bx bx-e" data-edit-of="'+i+'">Edit</button>';
     html+='<button class="bx bx-d" data-del-of data-row="'+o._row+'" data-code="'+o.code+'">Delete</button></div></td></tr>';
@@ -640,19 +652,20 @@ function actRev(id, status) {
 function loadSettings() {
   document.getElementById('settGrid').innerHTML='<div class="empty"><div class="spin"></div></div>';
   gsr1('adminGetSettings',KEY).then(function(s){
+    if (s.currency) { CUR = s.currency; applyCurLabels(); }
     var isOpen=s.is_open==='true'||s.is_open===true;
     document.getElementById('openTog').className='tog '+(isOpen?'on':'off');
     document.getElementById('openLbl').textContent=isOpen?'Restaurant Open':'Restaurant Closed';
     var html='<div class="scard"><h3>Delivery</h3>';
-    html+=srow('delivery_fee','Delivery Fee (R$)',s.delivery_fee);
-    html+=srow('free_delivery_above','Free Delivery Above (R$)',s.free_delivery_above);
+    html+=srow('delivery_fee','Delivery Fee ('+CUR+')',s.delivery_fee);
+    html+=srow('free_delivery_above','Free Delivery Above ('+CUR+')',s.free_delivery_above);
     html+=srow('estimated_delivery_min','Est. Delivery (min)',s.estimated_delivery_min);
     html+=srow('estimated_pickup_min','Est. Pickup (min)',s.estimated_pickup_min);
     html+='<button class="btn btn-primary" style="margin-top:14px" onclick="saveS([\'delivery_fee\',\'free_delivery_above\',\'estimated_delivery_min\',\'estimated_pickup_min\'])">Save</button></div>';
     html+='<div class="scard"><h3>Loyalty</h3>';
-    html+=srow('loyalty_points_per_real','Points per R$1',s.loyalty_points_per_real||'1');
+    html+=srow('loyalty_points_per_real','Points per '+CUR+'1',s.loyalty_points_per_real||'1');
     html+=srow('loyalty_min_redeem','Min to redeem',s.loyalty_min_redeem||'100');
-    html+=srow('loyalty_redeem_rate','Points per R$5',s.loyalty_redeem_rate||'100');
+    html+=srow('loyalty_redeem_rate','Points per '+CUR+'5',s.loyalty_redeem_rate||'100');
     html+='<button class="btn btn-primary" style="margin-top:14px" onclick="saveS([\'loyalty_points_per_real\',\'loyalty_min_redeem\',\'loyalty_redeem_rate\'])">Save</button></div>';
     html+='<div class="scard" style="grid-column:1/-1"><h3>Restaurant Location</h3>';
     html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">';
