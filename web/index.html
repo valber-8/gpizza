@@ -277,6 +277,7 @@ function cartDelta(id, d) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+function parseItems(json) { try { return JSON.parse(json || '[]'); } catch(e) { return []; } }
 const R    = (n) => 'R$' + Number(n).toFixed(2).replace('.', ',');
 const CAT  = { Pizzas: '🍕', Drinks: '🥤', Sides: '🥗', Desserts: '🍰' };
 const ico  = (c) => CAT[c] || '🍽';
@@ -541,8 +542,7 @@ function viewTrack() {
               </div>${i<PIPELINE.length-1?'<div class="st-line"></div>':''}`).join('')}
           </div>`}
         <div class="tr-items">
-          ${(()=>{try{return JSON.parse(o.items_json||'[]')}catch{return []}}())
-            .map(i=>`<span class="tr-item">${esc(i.name)} ×${i.qty}</span>`).join('')}
+          ${parseItems(o.items_json).map(i=>`<span class="tr-item">${esc(i.name)} ×${i.qty}</span>`).join('')}
         </div>
         <div class="tr-tot">Total: ${R(o.total)}</div>
       </div>` : ''}
