@@ -28,11 +28,11 @@ export default function CheckoutScreen() {
 
   async function handleSubmit() {
     if (!name.trim() || !phone.trim()) {
-      Alert.alert('Dados obrigatórios', 'Por favor preencha nome e telefone.');
+      Alert.alert('Required fields', 'Please fill in name and phone.');
       return;
     }
     if (orderType === 'delivery' && !address.trim()) {
-      Alert.alert('Endereço necessário', 'Informe o endereço para entrega.');
+      Alert.alert('Address required', 'Please enter a delivery address.');
       return;
     }
 
@@ -63,7 +63,7 @@ export default function CheckoutScreen() {
         },
       });
     } catch (e: any) {
-      Alert.alert('Erro ao realizar pedido', e.message);
+      Alert.alert('Error placing order', e.message);
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ export default function CheckoutScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.section}>Tipo de pedido</Text>
+        <Text style={styles.section}>Order type</Text>
         <View style={styles.typeRow}>
           {(['pickup', 'delivery'] as OrderType[]).map((t) => (
             <TouchableOpacity
@@ -84,22 +84,22 @@ export default function CheckoutScreen() {
               onPress={() => setOrderType(t)}
             >
               <Text style={[styles.typeBtnText, orderType === t && styles.typeBtnTextActive]}>
-                {t === 'pickup' ? '🏪 Retirada' : '🛵 Entrega'}
+                {t === 'pickup' ? '🏪 Pickup' : '🛵 Delivery'}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.section}>Seus dados</Text>
+        <Text style={styles.section}>Your details</Text>
         <TextInput
           style={styles.input}
-          placeholder="Nome completo"
+          placeholder="Full name"
           value={name}
           onChangeText={setName}
         />
         <TextInput
           style={styles.input}
-          placeholder="Telefone (WhatsApp)"
+          placeholder="Phone (WhatsApp)"
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
@@ -107,10 +107,10 @@ export default function CheckoutScreen() {
 
         {orderType === 'delivery' && (
           <>
-            <Text style={styles.section}>Endereço de entrega</Text>
+            <Text style={styles.section}>Delivery address</Text>
             <TextInput
               style={[styles.input, styles.multiline]}
-              placeholder="Rua, número, bairro"
+              placeholder="Street, number, area"
               value={address}
               onChangeText={setAddress}
               multiline
@@ -119,10 +119,10 @@ export default function CheckoutScreen() {
           </>
         )}
 
-        <Text style={styles.section}>Observações (opcional)</Text>
+        <Text style={styles.section}>Notes (optional)</Text>
         <TextInput
           style={[styles.input, styles.multiline]}
-          placeholder="Ex: sem cebola, ponto da carne..."
+          placeholder="E.g.: no onion, extra sauce..."
           value={notes}
           onChangeText={setNotes}
           multiline
@@ -132,17 +132,17 @@ export default function CheckoutScreen() {
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text>R$ {subtotal().toFixed(2)}</Text>
+            <Text>kr {subtotal().toFixed(2)}</Text>
           </View>
           {discount > 0 && (
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: Colors.success }]}>Desconto</Text>
-              <Text style={{ color: Colors.success }}>− R$ {discount.toFixed(2)}</Text>
+              <Text style={[styles.summaryLabel, { color: Colors.success }]}>Discount</Text>
+              <Text style={{ color: Colors.success }}>− kr {discount.toFixed(2)}</Text>
             </View>
           )}
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>R$ {total().toFixed(2)}</Text>
+            <Text style={styles.totalValue}>kr {total().toFixed(2)}</Text>
           </View>
         </View>
 
@@ -150,7 +150,7 @@ export default function CheckoutScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitBtnText}>Confirmar pedido</Text>
+            <Text style={styles.submitBtnText}>Confirm order</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

@@ -4,11 +4,11 @@ import { Colors, FontSize, Spacing } from '../constants/theme';
 import type { OrderStatus } from '../types';
 
 const STEPS: { key: OrderStatus; label: string; icon: string }[] = [
-  { key: 'pending',   label: 'Recebido',   icon: '📋' },
-  { key: 'confirmed', label: 'Confirmado', icon: '✅' },
-  { key: 'preparing', label: 'Preparando', icon: '👨‍🍳' },
-  { key: 'ready',     label: 'Pronto',     icon: '🍕' },
-  { key: 'delivered', label: 'Entregue',   icon: '🎉' },
+  { key: 'pending',   label: 'Received',  icon: '📋' },
+  { key: 'confirmed', label: 'Confirmed', icon: '✅' },
+  { key: 'preparing', label: 'Preparing', icon: '👨‍🍳' },
+  { key: 'ready',     label: 'Ready',     icon: '🍕' },
+  { key: 'delivered', label: 'Delivered', icon: '🎉' },
 ];
 
 interface Props {
@@ -19,7 +19,7 @@ export function OrderStatusStepper({ status }: Props) {
   if (status === 'cancelled') {
     return (
       <View style={styles.cancelled}>
-        <Text style={styles.cancelledText}>❌ Pedido cancelado</Text>
+        <Text style={styles.cancelledText}>❌ Order cancelled</Text>
       </View>
     );
   }

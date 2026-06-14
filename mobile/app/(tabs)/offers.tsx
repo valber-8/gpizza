@@ -11,7 +11,7 @@ export default function OffersScreen() {
     return <ActivityIndicator style={styles.center} size="large" color={Colors.primary} />;
   }
   if (error) {
-    return <Text style={styles.error}>Erro ao carregar ofertas.</Text>;
+    return <Text style={styles.error}>Failed to load offers.</Text>;
   }
 
   return (
@@ -23,7 +23,7 @@ export default function OffersScreen() {
       ListEmptyComponent={
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>🏷️</Text>
-          <Text style={styles.emptyText}>Nenhuma oferta ativa no momento</Text>
+          <Text style={styles.emptyText}>No active offers at the moment</Text>
         </View>
       }
     />

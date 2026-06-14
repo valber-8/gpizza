@@ -33,7 +33,7 @@ export default function OrdersScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Rastrear pedido</Text>
+      <Text style={styles.heading}>Track order</Text>
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -43,13 +43,13 @@ export default function OrdersScreen() {
           autoCapitalize="characters"
         />
         <TouchableOpacity style={styles.trackBtn} onPress={handleTrack}>
-          <Text style={styles.trackBtnText}>Buscar</Text>
+          <Text style={styles.trackBtnText}>Search</Text>
         </TouchableOpacity>
       </View>
 
       {isLoading && <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />}
       {error && (
-        <Text style={styles.error}>Pedido não encontrado. Verifique o número e tente novamente.</Text>
+        <Text style={styles.error}>Order not found. Check the number and try again.</Text>
       )}
 
       {order && (
@@ -57,7 +57,7 @@ export default function OrdersScreen() {
           <View style={styles.orderHeader}>
             <Text style={styles.orderId}>{order.order_id}</Text>
             <Text style={styles.orderType}>
-              {order.order_type === 'delivery' ? '🛵 Entrega' : '🏪 Retirada'}
+              {order.order_type === 'delivery' ? '🛵 Delivery' : '🏪 Pickup'}
             </Text>
           </View>
 
@@ -70,13 +70,13 @@ export default function OrdersScreen() {
                   {item.qty}x {item.name}
                 </Text>
                 <Text style={styles.orderItemPrice}>
-                  R$ {(item.qty * item.unit_price).toFixed(2)}
+                  kr {(item.qty * item.unit_price).toFixed(2)}
                 </Text>
               </View>
             ))}
             <View style={styles.orderTotal}>
               <Text style={styles.orderTotalLabel}>Total</Text>
-              <Text style={styles.orderTotalValue}>R$ {Number(order.total).toFixed(2)}</Text>
+              <Text style={styles.orderTotalValue}>kr {Number(order.total).toFixed(2)}</Text>
             </View>
           </View>
         </View>

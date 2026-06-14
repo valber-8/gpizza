@@ -13,23 +13,23 @@ export default function OrderConfirmedScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.emoji}>🎉</Text>
-      <Text style={styles.title}>Pedido confirmado!</Text>
+      <Text style={styles.title}>Order confirmed!</Text>
       <Text style={styles.subtitle}>
-        Seu pedido foi recebido e está sendo preparado.
+        Your order has been received and is being prepared.
       </Text>
 
       <View style={styles.card}>
         <View style={styles.row}>
-          <Text style={styles.label}>Número do pedido</Text>
+          <Text style={styles.label}>Order number</Text>
           <Text style={styles.value}>{order_id}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Total</Text>
-          <Text style={styles.value}>R$ {total}</Text>
+          <Text style={styles.value}>kr {total}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Tempo estimado</Text>
-          <Text style={styles.value}>{estimated} minutos</Text>
+          <Text style={styles.label}>Estimated time</Text>
+          <Text style={styles.value}>{estimated} min</Text>
         </View>
       </View>
 
@@ -39,11 +39,11 @@ export default function OrderConfirmedScreen() {
           router.push({ pathname: '/(tabs)/orders', params: { prefill: order_id } })
         }
       >
-        <Text style={styles.trackBtnText}>Acompanhar pedido</Text>
+        <Text style={styles.trackBtnText}>Track order</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.menuBtn} onPress={() => router.replace('/(tabs)')}>
-        <Text style={styles.menuBtnText}>Voltar ao cardápio</Text>
+        <Text style={styles.menuBtnText}>Back to menu</Text>
       </TouchableOpacity>
     </View>
   );

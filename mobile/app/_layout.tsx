@@ -22,11 +22,11 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="item/[id]" options={{ title: 'Detalhes' }} />
-        <Stack.Screen name="checkout" options={{ title: 'Finalizar Pedido' }} />
+        <Stack.Screen name="item/[id]" options={{ title: 'Details' }} />
+        <Stack.Screen name="checkout" options={{ title: 'Checkout' }} />
         <Stack.Screen
           name="order-confirmed"
-          options={{ title: 'Pedido Confirmado', headerBackVisible: false }}
+          options={{ title: 'Order Confirmed', headerBackVisible: false }}
         />
       </Stack>
     </QueryClientProvider>

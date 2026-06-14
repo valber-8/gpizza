@@ -27,9 +27,9 @@ export default function CartScreen() {
     try {
       const result = await validateOfferCode(codeInput.trim(), subtotal());
       setOffer(codeInput.trim().toUpperCase(), result.discount);
-      Alert.alert('Oferta aplicada!', `Desconto de R$ ${result.discount.toFixed(2)}`);
+      Alert.alert('Offer applied!', `Discount: kr ${result.discount.toFixed(2)}`);
     } catch (e: any) {
-      Alert.alert('Código inválido', e.message);
+      Alert.alert('Invalid code', e.message);
     } finally {
       setApplying(false);
     }
@@ -39,9 +39,9 @@ export default function CartScreen() {
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyIcon}>🛒</Text>
-        <Text style={styles.emptyText}>Seu carrinho está vazio</Text>
+        <Text style={styles.emptyText}>Your cart is empty</Text>
         <TouchableOpacity style={styles.browseBtn} onPress={() => router.push('/')}>
-          <Text style={styles.browseBtnText}>Ver cardápio</Text>
+          <Text style={styles.browseBtnText}>View menu</Text>
         </TouchableOpacity>
       </View>
     );
@@ -63,7 +63,7 @@ export default function CartScreen() {
         <View style={styles.offerRow}>
           <TextInput
             style={styles.codeInput}
-            placeholder="Código de desconto"
+            placeholder="Discount code"
             value={codeInput}
             onChangeText={setCodeInput}
             autoCapitalize="characters"
@@ -72,7 +72,7 @@ export default function CartScreen() {
             {applying ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.applyBtnText}>Aplicar</Text>
+              <Text style={styles.applyBtnText}>Apply</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -80,27 +80,27 @@ export default function CartScreen() {
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>R$ {subtotal().toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>kr {subtotal().toFixed(2)}</Text>
           </View>
           {discount > 0 && (
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: Colors.success }]}>
-                Desconto ({offerCode})
+                Discount ({offerCode})
               </Text>
               <Text style={[styles.summaryValue, { color: Colors.success }]}>
-                − R$ {discount.toFixed(2)}
+                − kr {discount.toFixed(2)}
               </Text>
             </View>
           )}
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>R$ {total().toFixed(2)}</Text>
+            <Text style={styles.totalValue}>kr {total().toFixed(2)}</Text>
           </View>
         </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.checkoutBtn} onPress={() => router.push('/checkout')}>
-        <Text style={styles.checkoutBtnText}>Finalizar pedido · R$ {total().toFixed(2)}</Text>
+        <Text style={styles.checkoutBtnText}>Place order · kr {total().toFixed(2)}</Text>
       </TouchableOpacity>
     </View>
   );

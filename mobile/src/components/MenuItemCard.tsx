@@ -19,7 +19,7 @@ export function MenuItemCard({ item, onPress, onAdd }: Props) {
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
         <View style={styles.footer}>
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>kr {item.price.toFixed(2)}</Text>
           <TouchableOpacity style={styles.addBtn} onPress={onAdd}>
             <Text style={styles.addBtnText}>+</Text>
           </TouchableOpacity>

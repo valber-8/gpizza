@@ -12,8 +12,8 @@ export function OfferCard({ offer }: Props) {
     offer.type === 'percent'
       ? `${offer.value}% OFF`
       : offer.type === 'fixed'
-      ? `R$ ${offer.value.toFixed(2)} OFF`
-      : 'Item grátis';
+      ? `kr ${offer.value.toFixed(2)} OFF`
+      : 'Free item';
 
   return (
     <View style={styles.card}>
@@ -25,12 +25,12 @@ export function OfferCard({ offer }: Props) {
         <Text style={styles.description}>{offer.description}</Text>
         {offer.code ? (
           <View style={styles.codeRow}>
-            <Text style={styles.codeLabel}>Código: </Text>
+            <Text style={styles.codeLabel}>Code: </Text>
             <Text style={styles.code}>{offer.code}</Text>
           </View>
         ) : null}
         {offer.min_order > 0 ? (
-          <Text style={styles.min}>Pedido mínimo: R$ {offer.min_order.toFixed(2)}</Text>
+          <Text style={styles.min}>Min. order: kr {offer.min_order.toFixed(2)}</Text>
         ) : null}
       </View>
     </View>

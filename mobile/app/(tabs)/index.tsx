@@ -21,7 +21,7 @@ export default function MenuScreen() {
     return <ActivityIndicator style={styles.center} size="large" color={Colors.primary} />;
   }
   if (error) {
-    return <Text style={styles.error}>Erro ao carregar cardápio. Tente novamente.</Text>;
+    return <Text style={styles.error}>Failed to load menu. Try again.</Text>;
   }
 
   return (
@@ -44,7 +44,7 @@ export default function MenuScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text style={styles.empty}>Nenhum item disponível nesta categoria</Text>
+          <Text style={styles.empty}>No items available in this category</Text>
         }
       />
     </View>

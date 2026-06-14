@@ -13,7 +13,7 @@ export default function ItemDetailScreen() {
   const item = data?.items.find((i) => i.id === id);
 
   if (isLoading) return <ActivityIndicator style={styles.center} size="large" color={Colors.primary} />;
-  if (!item) return <Text style={styles.error}>Item não encontrado.</Text>;
+  if (!item) return <Text style={styles.error}>Item not found.</Text>;
 
   return (
     <View style={styles.container}>
@@ -23,7 +23,7 @@ export default function ItemDetailScreen() {
         )}
         <View style={styles.content}>
           <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>kr {item.price.toFixed(2)}</Text>
           <Text style={styles.description}>{item.description}</Text>
         </View>
       </ScrollView>
@@ -31,7 +31,7 @@ export default function ItemDetailScreen() {
         style={styles.addBtn}
         onPress={() => { addItem(item); router.back(); }}
       >
-        <Text style={styles.addBtnText}>Adicionar ao carrinho · R$ {item.price.toFixed(2)}</Text>
+        <Text style={styles.addBtnText}>Add to cart · kr {item.price.toFixed(2)}</Text>
       </TouchableOpacity>
     </View>
   );

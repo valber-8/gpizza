@@ -23,28 +23,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Cardápio',
+          title: 'Menu',
           tabBarIcon: ({ focused }) => <TabIcon icon="🍕" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="offers"
         options={{
-          title: 'Ofertas',
+          title: 'Offers',
           tabBarIcon: ({ focused }) => <TabIcon icon="🏷️" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="cart"
         options={{
-          title: itemCount > 0 ? `Carrinho (${itemCount})` : 'Carrinho',
+          title: itemCount > 0 ? `Cart (${itemCount})` : 'Cart',
           tabBarIcon: ({ focused }) => <TabIcon icon="🛒" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
-          title: 'Pedidos',
+          title: 'Orders',
           tabBarIcon: ({ focused }) => <TabIcon icon="📦" focused={focused} />,
         }}
       />

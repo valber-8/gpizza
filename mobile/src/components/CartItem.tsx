@@ -16,7 +16,7 @@ export function CartItem({ cartItem, onIncrement, onDecrement }: Props) {
     <View style={styles.row}>
       <View style={styles.info}>
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.unitPrice}>R$ {item.price.toFixed(2)} cada</Text>
+        <Text style={styles.unitPrice}>kr {item.price.toFixed(2)} each</Text>
       </View>
       <View style={styles.controls}>
         <TouchableOpacity style={styles.btn} onPress={onDecrement}>
@@ -27,7 +27,7 @@ export function CartItem({ cartItem, onIncrement, onDecrement }: Props) {
           <Text style={styles.btnText}>+</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.total}>R$ {(item.price * qty).toFixed(2)}</Text>
+      <Text style={styles.total}>kr {(item.price * qty).toFixed(2)}</Text>
     </View>
   );
 }
