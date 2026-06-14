@@ -282,7 +282,7 @@ const I18N = {
     cancelled:'❌ Order cancelled', not_found:'Order not found.',
     searching:'Searching…', total_lbl_track:'Total:',
     app_dl_h:'Get the App', app_dl_p:'Order even faster. Download GPizza for Android or iOS.',
-    get_on:'Get it on', dl_on:'Download on the',
+    get_on:'Get it on', dl_on:'Download on the', dl_apk:'Download APK',
   },
   se: {
     nav_menu:'Meny', nav_track:'Spåra', nav_cart:'Kundvagn',
@@ -329,7 +329,7 @@ const I18N = {
     cancelled:'❌ Beställning avbruten', not_found:'Beställning hittades inte.',
     searching:'Söker…', total_lbl_track:'Totalt:',
     app_dl_h:'Ladda ner appen', app_dl_p:'Beställ ännu snabbare. Ladda ner GPizza för Android eller iOS.',
-    get_on:'Hämta på', dl_on:'Ladda ner på',
+    get_on:'Hämta på', dl_on:'Ladda ner på', dl_apk:'Ladda ner APK',
   }
 };
 function t(k) {
@@ -451,6 +451,7 @@ function card(item) {
 }
 
 // ── Home ──────────────────────────────────────────────────────────────────────
+const APK_DRIVE_URL = 'https://drive.google.com/uc?export=download&id=1BX9eSuw4Yjv17548R5ZH6nc9nFiJ3H3M&confirm=t';
 const SVG_ANDROID = '<svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M3 20.5v-17c0-.83 1.008-1.3 1.679-.83l14.996 8.5a1 1 0 0 1 0 1.66L4.679 21.33C4.008 21.8 3 21.33 3 20.5z"/></svg>';
 const SVG_APPLE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>';
 
@@ -500,15 +501,16 @@ function viewHome() {
       </div>
     </div>
 
-    ${(S.settings.android_app_url || S.settings.ios_app_url) ? `
     <section class="sec app-dl">
       <h2>${t('app_dl_h')}</h2>
       <p>${t('app_dl_p')}</p>
       <div class="store-wrap">
-        ${S.settings.android_app_url ? `<a href="${esc(S.settings.android_app_url)}" class="store-btn" target="_blank" rel="noopener noreferrer">${SVG_ANDROID}<div class="store-btn-txt"><small>${t('get_on')}</small><strong>Google Play</strong></div></a>` : ''}
+        ${S.settings.android_app_url
+          ? `<a href="${esc(S.settings.android_app_url)}" class="store-btn" target="_blank" rel="noopener noreferrer">${SVG_ANDROID}<div class="store-btn-txt"><small>${t('get_on')}</small><strong>Google Play</strong></div></a>`
+          : `<a href="${APK_DRIVE_URL}" class="store-btn" target="_blank" rel="noopener noreferrer">${SVG_ANDROID}<div class="store-btn-txt"><small>${t('dl_apk')}</small><strong>Android</strong></div></a>`}
         ${S.settings.ios_app_url ? `<a href="${esc(S.settings.ios_app_url)}" class="store-btn" target="_blank" rel="noopener noreferrer">${SVG_APPLE}<div class="store-btn-txt"><small>${t('dl_on')}</small><strong>App Store</strong></div></a>` : ''}
       </div>
-    </section>` : ''}
+    </section>
 
     <footer class="foot">
       <strong>🍕 GPizza</strong>
