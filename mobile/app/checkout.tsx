@@ -14,6 +14,7 @@ import {
 import { router } from 'expo-router';
 import { useCartStore } from '../src/store/cart';
 import { placeOrder } from '../src/api/orders';
+import { useT } from '../src/i18n';
 import { Colors, FontSize, Radius, Spacing } from '../src/constants/theme';
 import type { OrderType } from '../src/types';
 
@@ -25,14 +26,15 @@ export default function CheckoutScreen() {
   const [notes, setNotes] = useState('');
   const [orderType, setOrderType] = useState<OrderType>('pickup');
   const [loading, setLoading] = useState(false);
+  const { t } = useT();
 
   async function handleSubmit() {
     if (!name.trim() || !phone.trim()) {
-      Alert.alert('Required fields', 'Please fill in name and phone.');
+      Alert.alert(t('required_fields'), t('fill_name_phone'));
       return;
     }
     if (orderType === 'delivery' && !address.trim()) {
-      Alert.alert('Address required', 'Please enter a delivery address.');
+      Alert.alert(t('address_required'), t('enter_address'));
       return;
     }
 
@@ -63,7 +65,7 @@ export default function CheckoutScreen() {
         },
       });
     } catch (e: any) {
-      Alert.alert('Error placing order', e.message);
+      Alert.alert(t('error_order'), e.message);
     } finally {
       setLoading(false);
     }
@@ -75,31 +77,31 @@ export default function CheckoutScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.section}>Order type</Text>
+        <Text style={styles.section}>{t('order_type')}</Text>
         <View style={styles.typeRow}>
-          {(['pickup', 'delivery'] as OrderType[]).map((t) => (
+          {(['pickup', 'delivery'] as OrderType[]).map((tp) => (
             <TouchableOpacity
-              key={t}
-              style={[styles.typeBtn, orderType === t && styles.typeBtnActive]}
-              onPress={() => setOrderType(t)}
+              key={tp}
+              style={[styles.typeBtn, orderType === tp && styles.typeBtnActive]}
+              onPress={() => setOrderType(tp)}
             >
-              <Text style={[styles.typeBtnText, orderType === t && styles.typeBtnTextActive]}>
-                {t === 'pickup' ? '🏪 Pickup' : '🛵 Delivery'}
+              <Text style={[styles.typeBtnText, orderType === tp && styles.typeBtnTextActive]}>
+                {tp === 'pickup' ? `🏪 ${t('pickup')}` : `🛵 ${t('delivery')}`}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.section}>Your details</Text>
+        <Text style={styles.section}>{t('your_details')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Full name"
+          placeholder={t('full_name')}
           value={name}
           onChangeText={setName}
         />
         <TextInput
           style={styles.input}
-          placeholder="Phone (WhatsApp)"
+          placeholder={t('phone_whatsapp')}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
@@ -107,10 +109,10 @@ export default function CheckoutScreen() {
 
         {orderType === 'delivery' && (
           <>
-            <Text style={styles.section}>Delivery address</Text>
+            <Text style={styles.section}>{t('delivery_address')}</Text>
             <TextInput
               style={[styles.input, styles.multiline]}
-              placeholder="Street, number, area"
+              placeholder={t('street_placeholder')}
               value={address}
               onChangeText={setAddress}
               multiline
@@ -119,10 +121,10 @@ export default function CheckoutScreen() {
           </>
         )}
 
-        <Text style={styles.section}>Notes (optional)</Text>
+        <Text style={styles.section}>{t('notes_optional')}</Text>
         <TextInput
           style={[styles.input, styles.multiline]}
-          placeholder="E.g.: no onion, extra sauce..."
+          placeholder={t('notes_placeholder')}
           value={notes}
           onChangeText={setNotes}
           multiline
@@ -131,17 +133,17 @@ export default function CheckoutScreen() {
 
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryLabel}>{t('subtotal')}</Text>
             <Text>kr {subtotal().toFixed(2)}</Text>
           </View>
           {discount > 0 && (
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: Colors.success }]}>Discount</Text>
+              <Text style={[styles.summaryLabel, { color: Colors.success }]}>{t('discount')}</Text>
               <Text style={{ color: Colors.success }}>− kr {discount.toFixed(2)}</Text>
             </View>
           )}
           <View style={[styles.summaryRow, styles.totalRow]}>
-            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalLabel}>{t('total')}</Text>
             <Text style={styles.totalValue}>kr {total().toFixed(2)}</Text>
           </View>
         </View>
@@ -150,7 +152,7 @@ export default function CheckoutScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitBtnText}>Confirm order</Text>
+            <Text style={styles.submitBtnText}>{t('confirm_order')}</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

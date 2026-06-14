@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 import { useOrder } from '../../src/hooks/useOrder';
 import { OrderStatusStepper } from '../../src/components/OrderStatusStepper';
+import { useT } from '../../src/i18n';
 import { Colors, FontSize, Radius, Spacing } from '../../src/constants/theme';
 
 export default function OrdersScreen() {
@@ -18,6 +19,7 @@ export default function OrdersScreen() {
   const [orderId, setOrderId] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const { data: order, isLoading, error } = useOrder(activeId);
+  const { t } = useT();
 
   useEffect(() => {
     if (prefill) {
@@ -33,7 +35,7 @@ export default function OrdersScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Track order</Text>
+      <Text style={styles.heading}>{t('track_heading')}</Text>
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -43,21 +45,19 @@ export default function OrdersScreen() {
           autoCapitalize="characters"
         />
         <TouchableOpacity style={styles.trackBtn} onPress={handleTrack}>
-          <Text style={styles.trackBtnText}>Search</Text>
+          <Text style={styles.trackBtnText}>{t('search')}</Text>
         </TouchableOpacity>
       </View>
 
       {isLoading && <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />}
-      {error && (
-        <Text style={styles.error}>Order not found. Check the number and try again.</Text>
-      )}
+      {error && <Text style={styles.error}>{t('order_not_found')}</Text>}
 
       {order && (
         <View style={styles.orderCard}>
           <View style={styles.orderHeader}>
             <Text style={styles.orderId}>{order.order_id}</Text>
             <Text style={styles.orderType}>
-              {order.order_type === 'delivery' ? '🛵 Delivery' : '🏪 Pickup'}
+              {order.order_type === 'delivery' ? `🛵 ${t('delivery_type')}` : `🏪 ${t('pickup_type')}`}
             </Text>
           </View>
 
@@ -75,7 +75,7 @@ export default function OrdersScreen() {
               </View>
             ))}
             <View style={styles.orderTotal}>
-              <Text style={styles.orderTotalLabel}>Total</Text>
+              <Text style={styles.orderTotalLabel}>{t('total')}</Text>
               <Text style={styles.orderTotalValue}>kr {Number(order.total).toFixed(2)}</Text>
             </View>
           </View>

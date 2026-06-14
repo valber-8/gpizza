@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useT } from '../src/i18n';
 import { Colors, FontSize, Radius, Spacing } from '../src/constants/theme';
 
 export default function OrderConfirmedScreen() {
@@ -9,27 +10,26 @@ export default function OrderConfirmedScreen() {
     total: string;
     estimated: string;
   }>();
+  const { t } = useT();
 
   return (
     <View style={styles.container}>
       <Text style={styles.emoji}>🎉</Text>
-      <Text style={styles.title}>Order confirmed!</Text>
-      <Text style={styles.subtitle}>
-        Your order has been received and is being prepared.
-      </Text>
+      <Text style={styles.title}>{t('order_confirmed_title')}</Text>
+      <Text style={styles.subtitle}>{t('order_received_msg')}</Text>
 
       <View style={styles.card}>
         <View style={styles.row}>
-          <Text style={styles.label}>Order number</Text>
+          <Text style={styles.label}>{t('order_number')}</Text>
           <Text style={styles.value}>{order_id}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Total</Text>
+          <Text style={styles.label}>{t('total')}</Text>
           <Text style={styles.value}>kr {total}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Estimated time</Text>
-          <Text style={styles.value}>{estimated} min</Text>
+          <Text style={styles.label}>{t('estimated_time')}</Text>
+          <Text style={styles.value}>{estimated} {t('time_unit')}</Text>
         </View>
       </View>
 
@@ -39,11 +39,11 @@ export default function OrderConfirmedScreen() {
           router.push({ pathname: '/(tabs)/orders', params: { prefill: order_id } })
         }
       >
-        <Text style={styles.trackBtnText}>Track order</Text>
+        <Text style={styles.trackBtnText}>{t('track_order')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.menuBtn} onPress={() => router.replace('/(tabs)')}>
-        <Text style={styles.menuBtnText}>Back to menu</Text>
+        <Text style={styles.menuBtnText}>{t('back_to_menu')}</Text>
       </TouchableOpacity>
     </View>
   );

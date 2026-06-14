@@ -1,25 +1,28 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useT } from '../i18n';
 import { Colors, FontSize, Spacing } from '../constants/theme';
 import type { OrderStatus } from '../types';
-
-const STEPS: { key: OrderStatus; label: string; icon: string }[] = [
-  { key: 'pending',   label: 'Received',  icon: '📋' },
-  { key: 'confirmed', label: 'Confirmed', icon: '✅' },
-  { key: 'preparing', label: 'Preparing', icon: '👨‍🍳' },
-  { key: 'ready',     label: 'Ready',     icon: '🍕' },
-  { key: 'delivered', label: 'Delivered', icon: '🎉' },
-];
 
 interface Props {
   status: OrderStatus;
 }
 
 export function OrderStatusStepper({ status }: Props) {
+  const { t } = useT();
+
+  const STEPS: { key: OrderStatus; label: string; icon: string }[] = [
+    { key: 'pending',   label: t('status_received'),  icon: '📋' },
+    { key: 'confirmed', label: t('status_confirmed'), icon: '✅' },
+    { key: 'preparing', label: t('status_preparing'), icon: '👨‍🍳' },
+    { key: 'ready',     label: t('status_ready'),     icon: '🍕' },
+    { key: 'delivered', label: t('status_delivered'), icon: '🎉' },
+  ];
+
   if (status === 'cancelled') {
     return (
       <View style={styles.cancelled}>
-        <Text style={styles.cancelledText}>❌ Order cancelled</Text>
+        <Text style={styles.cancelledText}>❌ {t('order_cancelled')}</Text>
       </View>
     );
   }

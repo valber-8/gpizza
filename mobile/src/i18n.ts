@@ -1,0 +1,162 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export type Lang = 'sv' | 'en';
+
+const translations = {
+  sv: {
+    tab_menu: 'Meny',
+    tab_offers: 'Erbjudanden',
+    tab_cart: 'Varukorg',
+    tab_orders: 'Beställningar',
+    screen_details: 'Detaljer',
+    screen_checkout: 'Kassa',
+    screen_order_confirmed: 'Beställning bekräftad',
+    offer_applied: 'Erbjudande tillämpat!',
+    discount_applied: 'Rabatt: kr ',
+    invalid_code: 'Ogiltig kod',
+    cart_empty: 'Din varukorg är tom',
+    view_menu: 'Se menyn',
+    discount_code: 'Rabattkod',
+    apply: 'Använd',
+    subtotal: 'Delsumma',
+    discount: 'Rabatt',
+    total: 'Totalt',
+    place_order: 'Lägg beställning',
+    required_fields: 'Obligatoriska fält',
+    fill_name_phone: 'Vänligen fyll i namn och telefon.',
+    address_required: 'Adress krävs',
+    enter_address: 'Vänligen ange en leveransadress.',
+    order_type: 'Ordertyp',
+    pickup: 'Hämta',
+    delivery: 'Leverans',
+    your_details: 'Dina uppgifter',
+    full_name: 'Fullständigt namn',
+    phone_whatsapp: 'Telefon (WhatsApp)',
+    delivery_address: 'Leveransadress',
+    street_placeholder: 'Gata, nummer, område',
+    notes_optional: 'Kommentarer (valfritt)',
+    notes_placeholder: 'T.ex.: ingen lök, extra sås...',
+    confirm_order: 'Bekräfta beställning',
+    error_order: 'Fel vid beställning',
+    order_confirmed_title: 'Beställning bekräftad!',
+    order_received_msg: 'Din beställning har mottagits och förbereds.',
+    order_number: 'Beställningsnummer',
+    estimated_time: 'Uppskattad tid',
+    time_unit: 'min',
+    track_order: 'Spåra beställning',
+    back_to_menu: 'Tillbaka till menyn',
+    track_heading: 'Spåra beställning',
+    search: 'Sök',
+    order_not_found: 'Beställningen hittades inte. Kontrollera numret och försök igen.',
+    delivery_type: 'Leverans',
+    pickup_type: 'Upphämtning',
+    menu_error: 'Det gick inte att läsa in menyn. Försök igen.',
+    no_items: 'Inga varor tillgängliga i denna kategori',
+    offers_error: 'Det gick inte att läsa in erbjudanden.',
+    no_offers: 'Inga aktiva erbjudanden just nu',
+    item_not_found: 'Varan hittades inte.',
+    add_to_cart: 'Lägg i varukorgen',
+    each: 'st',
+    free_item: 'Gratis vara',
+    code_label: 'Kod: ',
+    min_order: 'Min. beställning: ',
+    status_received: 'Mottagen',
+    status_confirmed: 'Bekräftad',
+    status_preparing: 'Förbereds',
+    status_ready: 'Klar',
+    status_delivered: 'Levererad',
+    order_cancelled: 'Beställning avbruten',
+  },
+  en: {
+    tab_menu: 'Menu',
+    tab_offers: 'Offers',
+    tab_cart: 'Cart',
+    tab_orders: 'Orders',
+    screen_details: 'Details',
+    screen_checkout: 'Checkout',
+    screen_order_confirmed: 'Order Confirmed',
+    offer_applied: 'Offer applied!',
+    discount_applied: 'Discount: kr ',
+    invalid_code: 'Invalid code',
+    cart_empty: 'Your cart is empty',
+    view_menu: 'View menu',
+    discount_code: 'Discount code',
+    apply: 'Apply',
+    subtotal: 'Subtotal',
+    discount: 'Discount',
+    total: 'Total',
+    place_order: 'Place order',
+    required_fields: 'Required fields',
+    fill_name_phone: 'Please fill in name and phone.',
+    address_required: 'Address required',
+    enter_address: 'Please enter a delivery address.',
+    order_type: 'Order type',
+    pickup: 'Pickup',
+    delivery: 'Delivery',
+    your_details: 'Your details',
+    full_name: 'Full name',
+    phone_whatsapp: 'Phone (WhatsApp)',
+    delivery_address: 'Delivery address',
+    street_placeholder: 'Street, number, area',
+    notes_optional: 'Notes (optional)',
+    notes_placeholder: 'E.g.: no onion, extra sauce...',
+    confirm_order: 'Confirm order',
+    error_order: 'Error placing order',
+    order_confirmed_title: 'Order confirmed!',
+    order_received_msg: 'Your order has been received and is being prepared.',
+    order_number: 'Order number',
+    estimated_time: 'Estimated time',
+    time_unit: 'min',
+    track_order: 'Track order',
+    back_to_menu: 'Back to menu',
+    track_heading: 'Track order',
+    search: 'Search',
+    order_not_found: 'Order not found. Check the number and try again.',
+    delivery_type: 'Delivery',
+    pickup_type: 'Pickup',
+    menu_error: 'Failed to load menu. Try again.',
+    no_items: 'No items available in this category',
+    offers_error: 'Failed to load offers.',
+    no_offers: 'No active offers at the moment',
+    item_not_found: 'Item not found.',
+    add_to_cart: 'Add to cart',
+    each: 'each',
+    free_item: 'Free item',
+    code_label: 'Code: ',
+    min_order: 'Min. order: ',
+    status_received: 'Received',
+    status_confirmed: 'Confirmed',
+    status_preparing: 'Preparing',
+    status_ready: 'Ready',
+    status_delivered: 'Delivered',
+    order_cancelled: 'Order cancelled',
+  },
+};
+
+export type TKey = keyof typeof translations.en;
+
+interface LangStore {
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+}
+
+export const useLang = create<LangStore>()(
+  persist(
+    (set) => ({
+      lang: 'sv' as Lang,
+      setLang: (lang) => set({ lang }),
+    }),
+    {
+      name: 'gpizza-lang',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
+
+export function useT() {
+  const { lang, setLang } = useLang();
+  const t = (key: TKey): string => translations[lang][key] ?? translations.en[key];
+  return { t, lang, setLang };
+}

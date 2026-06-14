@@ -5,12 +5,14 @@ import { useMenu } from '../../src/hooks/useMenu';
 import { useCartStore } from '../../src/store/cart';
 import { MenuItemCard } from '../../src/components/MenuItemCard';
 import { CategoryTabs } from '../../src/components/CategoryTabs';
+import { useT } from '../../src/i18n';
 import { Colors, FontSize, Spacing } from '../../src/constants/theme';
 
 export default function MenuScreen() {
   const { data, isLoading, error } = useMenu();
   const [selectedCategory, setSelectedCategory] = useState('');
   const addItem = useCartStore((s) => s.addItem);
+  const { t } = useT();
 
   const categories = data?.categories ?? [];
   const items = data?.items ?? [];
@@ -21,7 +23,7 @@ export default function MenuScreen() {
     return <ActivityIndicator style={styles.center} size="large" color={Colors.primary} />;
   }
   if (error) {
-    return <Text style={styles.error}>Failed to load menu. Try again.</Text>;
+    return <Text style={styles.error}>{t('menu_error')}</Text>;
   }
 
   return (
@@ -43,9 +45,7 @@ export default function MenuScreen() {
         )}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <Text style={styles.empty}>No items available in this category</Text>
-        }
+        ListEmptyComponent={<Text style={styles.empty}>{t('no_items')}</Text>}
       />
     </View>
   );

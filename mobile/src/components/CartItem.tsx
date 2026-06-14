@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useT } from '../i18n';
 import { Colors, FontSize, Radius, Spacing } from '../constants/theme';
 import type { CartItem as CartItemType } from '../types';
 
@@ -12,11 +13,12 @@ interface Props {
 
 export function CartItem({ cartItem, onIncrement, onDecrement }: Props) {
   const { item, qty } = cartItem;
+  const { t } = useT();
   return (
     <View style={styles.row}>
       <View style={styles.info}>
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.unitPrice}>kr {item.price.toFixed(2)} each</Text>
+        <Text style={styles.unitPrice}>kr {item.price.toFixed(2)} {t('each')}</Text>
       </View>
       <View style={styles.controls}>
         <TouchableOpacity style={styles.btn} onPress={onDecrement}>

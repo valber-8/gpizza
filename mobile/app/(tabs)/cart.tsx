@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { useCartStore } from '../../src/store/cart';
 import { CartItem } from '../../src/components/CartItem';
 import { validateOfferCode } from '../../src/api/offers';
+import { useT } from '../../src/i18n';
 import { Colors, FontSize, Radius, Spacing } from '../../src/constants/theme';
 
 export default function CartScreen() {
@@ -20,6 +21,7 @@ export default function CartScreen() {
     useCartStore();
   const [codeInput, setCodeInput] = useState('');
   const [applying, setApplying] = useState(false);
+  const { t } = useT();
 
   async function handleApplyCode() {
     if (!codeInput.trim()) return;
@@ -27,9 +29,9 @@ export default function CartScreen() {
     try {
       const result = await validateOfferCode(codeInput.trim(), subtotal());
       setOffer(codeInput.trim().toUpperCase(), result.discount);
-      Alert.alert('Offer applied!', `Discount: kr ${result.discount.toFixed(2)}`);
+      Alert.alert(t('offer_applied'), t('discount_applied') + result.discount.toFixed(2));
     } catch (e: any) {
-      Alert.alert('Invalid code', e.message);
+      Alert.alert(t('invalid_code'), e.message);
     } finally {
       setApplying(false);
     }
@@ -39,9 +41,9 @@ export default function CartScreen() {
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyIcon}>🛒</Text>
-        <Text style={styles.emptyText}>Your cart is empty</Text>
+        <Text style={styles.emptyText}>{t('cart_empty')}</Text>
         <TouchableOpacity style={styles.browseBtn} onPress={() => router.push('/')}>
-          <Text style={styles.browseBtnText}>View menu</Text>
+          <Text style={styles.browseBtnText}>{t('view_menu')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -63,7 +65,7 @@ export default function CartScreen() {
         <View style={styles.offerRow}>
           <TextInput
             style={styles.codeInput}
-            placeholder="Discount code"
+            placeholder={t('discount_code')}
             value={codeInput}
             onChangeText={setCodeInput}
             autoCapitalize="characters"
@@ -72,20 +74,20 @@ export default function CartScreen() {
             {applying ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.applyBtnText}>Apply</Text>
+              <Text style={styles.applyBtnText}>{t('apply')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryLabel}>{t('subtotal')}</Text>
             <Text style={styles.summaryValue}>kr {subtotal().toFixed(2)}</Text>
           </View>
           {discount > 0 && (
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: Colors.success }]}>
-                Discount ({offerCode})
+                {t('discount')} ({offerCode})
               </Text>
               <Text style={[styles.summaryValue, { color: Colors.success }]}>
                 − kr {discount.toFixed(2)}
@@ -93,14 +95,14 @@ export default function CartScreen() {
             </View>
           )}
           <View style={[styles.summaryRow, styles.totalRow]}>
-            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalLabel}>{t('total')}</Text>
             <Text style={styles.totalValue}>kr {total().toFixed(2)}</Text>
           </View>
         </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.checkoutBtn} onPress={() => router.push('/checkout')}>
-        <Text style={styles.checkoutBtnText}>Place order · kr {total().toFixed(2)}</Text>
+        <Text style={styles.checkoutBtnText}>{t('place_order')} · kr {total().toFixed(2)}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -3,17 +3,19 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacit
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMenu } from '../../src/hooks/useMenu';
 import { useCartStore } from '../../src/store/cart';
+import { useT } from '../../src/i18n';
 import { Colors, FontSize, Radius, Spacing } from '../../src/constants/theme';
 
 export default function ItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, isLoading } = useMenu();
   const addItem = useCartStore((s) => s.addItem);
+  const { t } = useT();
 
   const item = data?.items.find((i) => i.id === id);
 
   if (isLoading) return <ActivityIndicator style={styles.center} size="large" color={Colors.primary} />;
-  if (!item) return <Text style={styles.error}>Item not found.</Text>;
+  if (!item) return <Text style={styles.error}>{t('item_not_found')}</Text>;
 
   return (
     <View style={styles.container}>
@@ -31,7 +33,7 @@ export default function ItemDetailScreen() {
         style={styles.addBtn}
         onPress={() => { addItem(item); router.back(); }}
       >
-        <Text style={styles.addBtnText}>Add to cart · kr {item.price.toFixed(2)}</Text>
+        <Text style={styles.addBtnText}>{t('add_to_cart')} · kr {item.price.toFixed(2)}</Text>
       </TouchableOpacity>
     </View>
   );

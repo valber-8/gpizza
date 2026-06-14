@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useT } from '../i18n';
 import { Colors, FontSize, Radius, Spacing } from '../constants/theme';
 import type { Offer } from '../types';
 
@@ -8,12 +9,13 @@ interface Props {
 }
 
 export function OfferCard({ offer }: Props) {
+  const { t } = useT();
   const discount =
     offer.type === 'percent'
       ? `${offer.value}% OFF`
       : offer.type === 'fixed'
       ? `kr ${offer.value.toFixed(2)} OFF`
-      : 'Free item';
+      : t('free_item');
 
   return (
     <View style={styles.card}>
@@ -25,12 +27,12 @@ export function OfferCard({ offer }: Props) {
         <Text style={styles.description}>{offer.description}</Text>
         {offer.code ? (
           <View style={styles.codeRow}>
-            <Text style={styles.codeLabel}>Code: </Text>
+            <Text style={styles.codeLabel}>{t('code_label')}</Text>
             <Text style={styles.code}>{offer.code}</Text>
           </View>
         ) : null}
         {offer.min_order > 0 ? (
-          <Text style={styles.min}>Min. order: kr {offer.min_order.toFixed(2)}</Text>
+          <Text style={styles.min}>{t('min_order')}kr {offer.min_order.toFixed(2)}</Text>
         ) : null}
       </View>
     </View>
