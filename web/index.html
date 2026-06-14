@@ -30,6 +30,8 @@
     .nav-cart { background: var(--red); color: #fff; border: none; border-radius: var(--rbtn); padding: 8px 18px; font: 600 .9rem 'Inter',sans-serif; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background .15s; }
     .nav-cart:hover { background: var(--red2); }
     .badge { background: #fff; color: var(--red); border-radius: 50%; width: 20px; height: 20px; font-size: .72rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .lang-btn { background: none; border: 1.5px solid var(--border); border-radius: 16px; padding: 4px 12px; font: 600 .82rem 'Inter',sans-serif; color: var(--muted); transition: all .15s; flex-shrink: 0; }
+    .lang-btn:hover { border-color: var(--red); color: var(--red); }
 
     /* ── App ── */
     #app { max-width: var(--max); margin: 0 auto; padding-bottom: 60px; }
@@ -223,15 +225,114 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 const API = 'https://script.google.com/macros/s/AKfycbxAFzDejhZC-_vBtzIec7oMuI1KZ6rgDU96T6fyRfI3r20bZq2_eJQY0x6xOF2W_Kg7bQ/exec';
 
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    nav_menu:'Menu', nav_track:'Track', nav_cart:'Cart',
+    closed:"🚫 We're closed. Come back later!",
+    hero_h1:'Artisan Pizza,<br>Delivered Fast 🍕',
+    hero_p:"Fresh ingredients, unmatched flavor. Ready in 30 minutes or your next order is on us.",
+    order_now:'Order Now', view_menu:'View Menu',
+    featured_h:'Most Ordered', featured_link:'View all →',
+    promo_title:'🎉 First order?',
+    promo_body:'Use code <strong>PIZZA10</strong> and get 10% off!',
+    copy_code:'Copy code',
+    why_title:'Why GPizza?',
+    feat1_t:'Delivery in 30 min',   feat1_p:'Guaranteed 30 minutes or the next pizza is on us.',
+    feat2_t:'Fresh Ingredients',    feat2_p:'Local production, ingredients selected daily.',
+    feat3_t:'Easy Ordering',        feat3_p:'Choose, order and track in real time.',
+    feat4_t:'Loyalty',              feat4_p:'1 point per {c}1. 100 points = {c}5 off.',
+    track_cta_h:'Track your order', track_cta_p:'Know exactly where your pizza is.',
+    track_ph:'Order number…',       track_btn:'Track',
+    find_h:'Find Us',
+    tagline:'Artisanal with love, delivered with speed.',
+    foot_copy:'All rights reserved.',
+    menu_h:'Our Menu', search_ph:'🔍 Search…', cat_all:'🍽 All',
+    unavail:'Unavailable', add:'+ Add', empty_items:'No items found.',
+    cart_h:'Cart', empty_cart:'Your cart is empty.', see_menu:'View Menu',
+    coupon_lbl:'Discount coupon', promo_ph:'Code…', apply:'Apply',
+    discount_applied:'✓ Discount applied',
+    subtotal:'Subtotal', discount:'Discount', total_lbl:'Total',
+    checkout_btn:'Checkout →', continue_shop:'Continue shopping',
+    checkout_h:'Checkout',
+    name_l:'Full name *', phone_l:'Phone *', type_l:'Order type *',
+    delivery_opt:'🛵 Delivery', pickup_opt:'🏪 Pickup',
+    addr_l:'Address *', notes_l:'Notes',
+    addr_ph:'Street, number, neighborhood…',
+    notes_ph:'E.g.: no onion, doorbell broken…',
+    place_order:'Place Order', placing:'Sending…',
+    confirmed_h:'Order Confirmed!',
+    confirmed_p:'We received your order and it will be ready soon.',
+    order_num_l:'Order number', pts_earned_l:'Points earned',
+    track_order:'Track Order →', back_home:'Back to home',
+    track_page_h:'Track Order', search_ph_track:'Order number…', search_btn:'Search',
+    order_lbl:'Order',
+    st_received:'Received', st_preparing:'Preparing', st_baking:'Baking',
+    st_ready:'Ready', st_delivery:'On the Way', st_completed:'Delivered',
+    cancelled:'❌ Order cancelled', not_found:'Order not found.',
+    searching:'Searching…', total_lbl_track:'Total:',
+  },
+  pt: {
+    nav_menu:'Cardápio', nav_track:'Rastrear', nav_cart:'Carrinho',
+    closed:'🚫 Estamos fechados. Volte mais tarde!',
+    hero_h1:'Pizza Artesanal,<br>Entregue Rápido 🍕',
+    hero_p:'Ingredientes frescos, sabor inigualável. Pronto em 30 minutos ou o próximo pedido é por nossa conta.',
+    order_now:'Pedir Agora', view_menu:'Ver Cardápio',
+    featured_h:'Mais Pedidos', featured_link:'Ver tudo →',
+    promo_title:'🎉 Primeiro pedido?',
+    promo_body:'Use o código <strong>PIZZA10</strong> e ganhe 10% de desconto!',
+    copy_code:'Copiar código',
+    why_title:'Por que GPizza?',
+    feat1_t:'Entrega em 30 min',    feat1_p:'Garantimos 30 minutos ou a próxima pizza é por nossa conta.',
+    feat2_t:'Ingredientes Frescos', feat2_p:'Produção local, ingredientes selecionados diariamente.',
+    feat3_t:'Pedido Fácil',         feat3_p:'Escolha, peça e acompanhe em tempo real.',
+    feat4_t:'Fidelidade',           feat4_p:'1 ponto por {c}1. 100 pontos = {c}5 de desconto.',
+    track_cta_h:'Acompanhe seu pedido', track_cta_p:'Saiba exatamente onde está sua pizza.',
+    track_ph:'Número do pedido…',   track_btn:'Rastrear',
+    find_h:'Como Chegar',
+    tagline:'Artesanal com amor, entregue com velocidade.',
+    foot_copy:'Todos os direitos reservados.',
+    menu_h:'Nosso Cardápio', search_ph:'🔍 Buscar…', cat_all:'🍽 Todos',
+    unavail:'Indisponível', add:'+ Adicionar', empty_items:'Nenhum item encontrado.',
+    cart_h:'Carrinho', empty_cart:'Seu carrinho está vazio.', see_menu:'Ver Cardápio',
+    coupon_lbl:'Cupom de desconto', promo_ph:'Código…', apply:'Aplicar',
+    discount_applied:'✓ Desconto aplicado',
+    subtotal:'Subtotal', discount:'Desconto', total_lbl:'Total',
+    checkout_btn:'Finalizar Pedido →', continue_shop:'Continuar comprando',
+    checkout_h:'Finalizar Pedido',
+    name_l:'Nome completo *', phone_l:'Telefone *', type_l:'Tipo de entrega *',
+    delivery_opt:'🛵 Entrega', pickup_opt:'🏪 Retirada',
+    addr_l:'Endereço *', notes_l:'Observações',
+    addr_ph:'Rua, número, bairro…',
+    notes_ph:'Ex: sem cebola, campainha quebrada…',
+    place_order:'Confirmar Pedido', placing:'Enviando…',
+    confirmed_h:'Pedido Confirmado!',
+    confirmed_p:'Seu pedido foi recebido e já está sendo preparado.',
+    order_num_l:'Número do pedido', pts_earned_l:'Pontos ganhos',
+    track_order:'Acompanhar Pedido →', back_home:'Voltar ao início',
+    track_page_h:'Rastrear Pedido', search_ph_track:'Número do pedido…', search_btn:'Buscar',
+    order_lbl:'Pedido',
+    st_received:'Recebido', st_preparing:'Preparando', st_baking:'No Forno',
+    st_ready:'Pronto', st_delivery:'A Caminho', st_completed:'Entregue',
+    cancelled:'❌ Pedido cancelado', not_found:'Pedido não encontrado.',
+    searching:'Buscando…', total_lbl_track:'Total:',
+  }
+};
+function t(k) {
+  const str = (I18N[S.lang] || I18N.pt)[k] || k;
+  return str.replace(/{c}/g, S.currency || 'R$');
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const S = {
   view: 'home', menu: [], cart: [], settings: {},
   cat: '', q: '',
   promoCode: '', promoDsc: 0,
-  order: null,       // last placed order response
-  trackId: '',
-  tracked: null,
+  order: null,
+  trackId: '', tracked: null,
   isOpen: true,
+  lang: localStorage.getItem('gpz_lang') || 'pt',
+  currency: 'R$',
 };
 
 // ── API ────────────────────────────────────────────────────────────────────────
@@ -278,8 +379,12 @@ function cartDelta(id, d) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function parseItems(json) { try { return JSON.parse(json || '[]'); } catch(e) { return []; } }
-const R    = (n) => 'R$' + Number(n).toFixed(2).replace('.', ',');
-const CAT  = { Pizzas: '🍕', Drinks: '🥤', Sides: '🥗', Desserts: '🍰' };
+function R(n) {
+  const num = Number(n).toFixed(2);
+  const sym = S.currency || 'R$';
+  return S.lang === 'pt' ? sym + num.replace('.', ',') : sym + num;
+}
+const CAT  = { Pizzas: '🍕', Drinks: '🥤', Sides: '🥗', Desserts: '🍰', Food: '🍽' };
 const ico  = (c) => CAT[c] || '🍽';
 const esc  = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 
@@ -296,11 +401,12 @@ function renderNav() {
     `<div class="nav-inner">
       <a class="nav-logo" data-a="go" data-v="home">🍕 GPizza</a>
       <div class="nav-links">
-        <a data-a="go" data-v="menu" class="${S.view==='menu'?'act':''}">Cardápio</a>
-        <a data-a="go" data-v="track" class="${S.view==='track'?'act':''}">Rastrear</a>
+        <a data-a="go" data-v="menu" class="${S.view==='menu'?'act':''}">${t('nav_menu')}</a>
+        <a data-a="go" data-v="track" class="${S.view==='track'?'act':''}">${t('nav_track')}</a>
       </div>
+      <button class="lang-btn" data-a="setlang" data-l="${S.lang==='pt'?'en':'pt'}">${S.lang==='pt'?'EN':'PT'}</button>
       <button class="nav-cart" data-a="go" data-v="cart">
-        🛒 Carrinho${n?` <span class="badge">${n}</span>`:''}
+        🛒 ${t('nav_cart')}${n?` <span class="badge">${n}</span>`:''}
       </button>
     </div>`;
 }
@@ -320,9 +426,9 @@ function card(item) {
         <div class="card-desc">${esc(item.description||'')}</div>
         <div class="card-ft">
           <span class="card-price">${R(item.price)}</span>
-          ${dim ? `<span class="dim-txt">Indisponível</span>`
+          ${dim ? `<span class="dim-txt">${t('unavail')}</span>`
           : qty === 0
-            ? `<button class="btn-add" data-a="add" data-id="${item.id}">+ Adicionar</button>`
+            ? `<button class="btn-add" data-a="add" data-id="${item.id}">${t('add')}</button>`
             : `<div class="qty"><button class="qty-btn" data-a="dec" data-id="${item.id}">−</button><span>${qty}</span><button class="qty-btn" data-a="inc" data-id="${item.id}">+</button></div>`
           }
         </div>
@@ -334,14 +440,14 @@ function card(item) {
 function viewHome() {
   const featured = S.menu.filter(i => i.available !== false).slice(0, 4);
   return `
-    ${!S.isOpen ? `<div class="closed">🚫 Estamos fechados. Volte mais tarde!</div>` : ''}
+    ${!S.isOpen ? `<div class="closed">${t('closed')}</div>` : ''}
     <div class="hero">
       <div class="hero-text">
-        <h1>Pizza Artesanal,<br>Entregue Rápido 🍕</h1>
-        <p>Ingredientes frescos, sabor inigualável. Pronto em 30 minutos ou o próximo pedido é por nossa conta.</p>
+        <h1>${t('hero_h1')}</h1>
+        <p>${t('hero_p')}</p>
         <div class="hero-btns">
-          <button class="btn btn-p" data-a="go" data-v="menu">Pedir Agora</button>
-          <button class="btn btn-o" data-a="go" data-v="menu">Ver Cardápio</button>
+          <button class="btn btn-p" data-a="go" data-v="menu">${t('order_now')}</button>
+          <button class="btn btn-o" data-a="go" data-v="menu">${t('view_menu')}</button>
         </div>
       </div>
       <div class="hero-emoji">🍕</div>
@@ -349,42 +455,42 @@ function viewHome() {
 
     ${featured.length ? `
     <section class="sec" style="padding-top:0">
-      <div class="sec-hd"><h2>Mais Pedidos</h2><a class="lnk" data-a="go" data-v="menu">Ver tudo →</a></div>
+      <div class="sec-hd"><h2>${t('featured_h')}</h2><a class="lnk" data-a="go" data-v="menu">${t('featured_link')}</a></div>
       <div class="grid">${featured.map(card).join('')}</div>
     </section>` : ''}
 
     <div class="promo-bar">
-      <div><strong>🎉 Primeiro pedido?</strong><p>Use o código <strong>PIZZA10</strong> e ganhe 10% de desconto!</p></div>
-      <button class="btn-cp" data-a="copy">Copiar código</button>
+      <div><strong>${t('promo_title')}</strong><p>${t('promo_body')}</p></div>
+      <button class="btn-cp" data-a="copy">${t('copy_code')}</button>
     </div>
 
     <section class="sec sec-ctr">
-      <h2 style="margin-bottom:32px">Por que GPizza?</h2>
+      <h2 style="margin-bottom:32px">${t('why_title')}</h2>
       <div class="features">
-        <div class="feat"><span class="feat-ico">⚡</span><strong>Entrega em 30 min</strong><p>Garantimos 30 minutos ou a próxima pizza é por nossa conta.</p></div>
-        <div class="feat"><span class="feat-ico">🧀</span><strong>Ingredientes Frescos</strong><p>Produção local, ingredientes selecionados diariamente.</p></div>
-        <div class="feat"><span class="feat-ico">📱</span><strong>Pedido Fácil</strong><p>Escolha, peça e acompanhe em tempo real.</p></div>
-        <div class="feat"><span class="feat-ico">🎁</span><strong>Fidelidade</strong><p>1 ponto por R$1. 100 pontos = R$5 de desconto.</p></div>
+        <div class="feat"><span class="feat-ico">⚡</span><strong>${t('feat1_t')}</strong><p>${t('feat1_p')}</p></div>
+        <div class="feat"><span class="feat-ico">🧀</span><strong>${t('feat2_t')}</strong><p>${t('feat2_p')}</p></div>
+        <div class="feat"><span class="feat-ico">📱</span><strong>${t('feat3_t')}</strong><p>${t('feat3_p')}</p></div>
+        <div class="feat"><span class="feat-ico">🎁</span><strong>${t('feat4_t')}</strong><p>${t('feat4_p')}</p></div>
       </div>
     </section>
 
     <div class="track-cta sec">
-      <h2>Acompanhe seu pedido</h2>
-      <p>Saiba exatamente onde está sua pizza.</p>
+      <h2>${t('track_cta_h')}</h2>
+      <p>${t('track_cta_p')}</p>
       <div class="track-row">
-        <input id="htrack" type="text" class="inp" placeholder="Número do pedido…">
-        <button class="btn btn-p" data-a="htrack">Rastrear</button>
+        <input id="htrack" type="text" class="inp" placeholder="${t('track_ph')}">
+        <button class="btn btn-p" data-a="htrack">${t('track_btn')}</button>
       </div>
     </div>
 
     <footer class="foot">
       <strong>🍕 GPizza</strong>
-      <p>Artesanal com amor, entregue com velocidade.</p>
+      <p>${t('tagline')}</p>
       <div class="foot-links">
-        <a data-a="go" data-v="menu">Cardápio</a>
-        <a data-a="go" data-v="track">Rastrear</a>
+        <a data-a="go" data-v="menu">${t('nav_menu')}</a>
+        <a data-a="go" data-v="track">${t('nav_track')}</a>
       </div>
-      <small>© 2025 GPizza. Todos os direitos reservados.</small>
+      <small>© 2025 GPizza. ${t('foot_copy')}</small>
     </footer>`;
 }
 
@@ -396,31 +502,31 @@ function viewMenu() {
     .filter(i => !S.q || i.name.toLowerCase().includes(S.q.toLowerCase()));
   return `
     <div class="ph">
-      <h1>Nosso Cardápio</h1>
-      <input id="srch" type="text" class="inp search" placeholder="🔍 Buscar…" value="${esc(S.q)}">
+      <h1>${t('menu_h')}</h1>
+      <input id="srch" type="text" class="inp search" placeholder="${t('search_ph')}" value="${esc(S.q)}">
     </div>
     <div class="tabs">
-      <button class="tab${S.cat===''?' act':''}" data-a="cat" data-cat="">🍽 Todos</button>
+      <button class="tab${S.cat===''?' act':''}" data-a="cat" data-cat="">${t('cat_all')}</button>
       ${cats.map(c=>`<button class="tab${S.cat===c?' act':''}" data-a="cat" data-cat="${esc(c)}">${ico(c)} ${esc(c)}</button>`).join('')}
     </div>
     <div class="grid pad" id="mgrid">
-      ${items.length ? items.map(card).join('') : '<div class="empty">Nenhum item encontrado.</div>'}
+      ${items.length ? items.map(card).join('') : `<div class="empty">${t('empty_items')}</div>`}
     </div>`;
 }
 
 // ── Cart ──────────────────────────────────────────────────────────────────────
 function viewCart() {
   if (!S.cart.length) return `
-    <div class="ph"><h1>Carrinho</h1></div>
+    <div class="ph"><h1>${t('cart_h')}</h1></div>
     <div class="empty-c">
       <div class="ei">🛒</div>
-      <p>Seu carrinho está vazio.</p>
-      <button class="btn btn-p" data-a="go" data-v="menu">Ver Cardápio</button>
+      <p>${t('empty_cart')}</p>
+      <button class="btn btn-p" data-a="go" data-v="menu">${t('see_menu')}</button>
     </div>`;
 
   const sub = cartSub(), dsc = S.promoDsc, tot = cartTotal();
   return `
-    <div class="ph"><h1>Carrinho</h1></div>
+    <div class="ph"><h1>${t('cart_h')}</h1></div>
     <div class="cart-lay">
       <div>
         ${S.cart.map(i=>`
@@ -439,20 +545,20 @@ function viewCart() {
       </div>
       <div class="c-side">
         <div class="c-box">
-          <div class="c-box-title">Cupom de desconto</div>
+          <div class="c-box-title">${t('coupon_lbl')}</div>
           <div class="promo-row">
-            <input id="promo" type="text" class="inp" placeholder="Código…" value="${esc(S.promoCode)}">
-            <button class="btn-s" data-a="promo">Aplicar</button>
+            <input id="promo" type="text" class="inp" placeholder="${t('promo_ph')}" value="${esc(S.promoCode)}">
+            <button class="btn-s" data-a="promo">${t('apply')}</button>
           </div>
-          ${dsc>0?`<div class="ok-tag">✓ Desconto aplicado: −${R(dsc)}</div>`:''}
+          ${dsc>0?`<div class="ok-tag">${t('discount_applied')}: −${R(dsc)}</div>`:''}
         </div>
         <div class="c-box">
-          <div class="tot-row"><span>Subtotal</span><span>${R(sub)}</span></div>
-          ${dsc>0?`<div class="tot-row disc"><span>Desconto</span><span>−${R(dsc)}</span></div>`:''}
-          <div class="tot-row grand"><span>Total</span><span>${R(tot)}</span></div>
+          <div class="tot-row"><span>${t('subtotal')}</span><span>${R(sub)}</span></div>
+          ${dsc>0?`<div class="tot-row disc"><span>${t('discount')}</span><span>−${R(dsc)}</span></div>`:''}
+          <div class="tot-row grand"><span>${t('total_lbl')}</span><span>${R(tot)}</span></div>
         </div>
-        <button class="btn btn-p btn-w" data-a="go" data-v="checkout">Finalizar Pedido →</button>
-        <button class="btn btn-o" data-a="go" data-v="menu">Continuar comprando</button>
+        <button class="btn btn-p btn-w" data-a="go" data-v="checkout">${t('checkout_btn')}</button>
+        <button class="btn btn-o" data-a="go" data-v="menu">${t('continue_shop')}</button>
       </div>
     </div>`;
 }
@@ -461,26 +567,26 @@ function viewCart() {
 function viewCheckout() {
   const sub = cartSub(), dsc = S.promoDsc, tot = cartTotal();
   return `
-    <div class="ph"><h1>Finalizar Pedido</h1></div>
+    <div class="ph"><h1>${t('checkout_h')}</h1></div>
     <div class="co-wrap">
       <form id="coform" class="co-form">
-        <div class="fg"><label>Nome completo *</label><input name="name" type="text" class="inp" placeholder="Seu nome" required></div>
-        <div class="fg"><label>Telefone *</label><input name="phone" type="tel" class="inp" placeholder="+55 (11) 99999-9999" required></div>
+        <div class="fg"><label>${t('name_l')}</label><input name="name" type="text" class="inp" placeholder="${t('name_l').replace(' *','')}" required></div>
+        <div class="fg"><label>${t('phone_l')}</label><input name="phone" type="tel" class="inp" placeholder="+55 (11) 99999-9999" required></div>
         <div class="fg">
-          <label>Tipo de entrega *</label>
+          <label>${t('type_l')}</label>
           <div class="radios">
-            <label class="rad"><input type="radio" name="type" value="delivery" checked> 🛵 Entrega</label>
-            <label class="rad"><input type="radio" name="type" value="pickup"> 🏪 Retirada</label>
+            <label class="rad"><input type="radio" name="type" value="delivery" checked> ${t('delivery_opt')}</label>
+            <label class="rad"><input type="radio" name="type" value="pickup"> ${t('pickup_opt')}</label>
           </div>
         </div>
-        <div class="fg" id="addr-g"><label>Endereço *</label><input name="address" type="text" class="inp" placeholder="Rua, número, bairro…"></div>
-        <div class="fg"><label>Observações</label><textarea name="notes" class="inp" placeholder="Ex: sem cebola, campainha quebrada…"></textarea></div>
+        <div class="fg" id="addr-g"><label>${t('addr_l')}</label><input name="address" type="text" class="inp" placeholder="${t('addr_ph')}"></div>
+        <div class="fg"><label>${t('notes_l')}</label><textarea name="notes" class="inp" placeholder="${t('notes_ph')}"></textarea></div>
         <div class="summ">
           ${S.cart.map(i=>`<div class="s-row"><span>${esc(i.name)} ×${i.qty}</span><span>${R(i.price*i.qty)}</span></div>`).join('')}
-          ${dsc>0?`<div class="s-row disc"><span>Desconto</span><span>−${R(dsc)}</span></div>`:''}
-          <div class="s-row tot"><span>Total</span><span>${R(tot)}</span></div>
+          ${dsc>0?`<div class="s-row disc"><span>${t('discount')}</span><span>−${R(dsc)}</span></div>`:''}
+          <div class="s-row tot"><span>${t('total_lbl')}</span><span>${R(tot)}</span></div>
         </div>
-        <button type="submit" class="btn btn-p btn-w" id="place-btn">Confirmar Pedido</button>
+        <button type="submit" class="btn btn-p btn-w" id="place-btn">${t('place_order')}</button>
       </form>
     </div>`;
 }
@@ -491,28 +597,28 @@ function viewConfirmed() {
   return `
     <div class="conf">
       <div class="ico">✅</div>
-      <h1>Pedido Confirmado!</h1>
-      <p>Seu pedido foi recebido e já está sendo preparado.</p>
+      <h1>${t('confirmed_h')}</h1>
+      <p>${t('confirmed_p')}</p>
       ${o ? `
         <div class="info-card">
-          <div class="i-row"><span>Número do pedido</span><strong>${esc(o.order_id||'')}</strong></div>
-          ${o.points_earned ? `<div class="i-row"><span>Pontos ganhos</span><strong>+${o.points_earned} pts 🎁</strong></div>` : ''}
+          <div class="i-row"><span>${t('order_num_l')}</span><strong>${esc(o.order_id||'')}</strong></div>
+          ${o.points_earned ? `<div class="i-row"><span>${t('pts_earned_l')}</span><strong>+${o.points_earned} pts 🎁</strong></div>` : ''}
         </div>
-        <button class="btn btn-p" data-a="go" data-v="track" data-tid="${esc(o.order_id||'')}">Acompanhar Pedido →</button>
+        <button class="btn btn-p" data-a="go" data-v="track" data-tid="${esc(o.order_id||'')}">${t('track_order')}</button>
       ` : ''}
-      <button class="btn btn-o" data-a="go" data-v="home">Voltar ao início</button>
+      <button class="btn btn-o" data-a="go" data-v="home">${t('back_home')}</button>
     </div>`;
 }
 
 // ── Track ─────────────────────────────────────────────────────────────────────
 const STEPS = [
-  { k: 'pending',          l: 'Recebido',   e: '📋' },
-  { k: 'received',         l: 'Recebido',   e: '📋' },
-  { k: 'preparing',        l: 'Preparando', e: '👨‍🍳' },
-  { k: 'baking',           l: 'No Forno',   e: '🔥' },
-  { k: 'ready',            l: 'Pronto',     e: '✅' },
-  { k: 'out_for_delivery', l: 'A Caminho',  e: '🛵' },
-  { k: 'completed',        l: 'Entregue',   e: '🎉' },
+  { k: 'pending',          lk: 'st_received',  e: '📋' },
+  { k: 'received',         lk: 'st_received',  e: '📋' },
+  { k: 'preparing',        lk: 'st_preparing', e: '👨‍🍳' },
+  { k: 'baking',           lk: 'st_baking',    e: '🔥' },
+  { k: 'ready',            lk: 'st_ready',     e: '✅' },
+  { k: 'out_for_delivery', lk: 'st_delivery',  e: '🛵' },
+  { k: 'completed',        lk: 'st_completed', e: '🎉' },
 ];
 const PIPELINE = STEPS.filter(s => s.k !== 'pending');
 
@@ -524,27 +630,27 @@ function viewTrack() {
     if (si < 0 && o.status === 'pending') si = 0;
   }
   return `
-    <div class="ph"><h1>Rastrear Pedido</h1></div>
+    <div class="ph"><h1>${t('track_page_h')}</h1></div>
     <div class="tr-search">
-      <input id="trid" type="text" class="inp" placeholder="Número do pedido…" value="${esc(S.trackId||'')}">
-      <button class="btn btn-p" data-a="dotrack">Buscar</button>
+      <input id="trid" type="text" class="inp" placeholder="${t('search_ph_track')}" value="${esc(S.trackId||'')}">
+      <button class="btn btn-p" data-a="dotrack">${t('search_btn')}</button>
     </div>
     ${o ? `
       <div class="tr-card">
-        <div class="tr-id">Pedido <strong>${esc(o.order_id)}</strong></div>
-        <div class="tr-who">${esc(o.customer_name)} · ${o.order_type==='pickup'?'🏪 Retirada':'🛵 Entrega'}</div>
-        ${o.status==='cancelled' ? `<div class="cancelled">❌ Pedido cancelado</div>` : `
+        <div class="tr-id">${t('order_lbl')} <strong>${esc(o.order_id)}</strong></div>
+        <div class="tr-who">${esc(o.customer_name)} · ${o.order_type==='pickup'?t('pickup_opt'):t('delivery_opt')}</div>
+        ${o.status==='cancelled' ? `<div class="cancelled">${t('cancelled')}</div>` : `
           <div class="pipeline">
             ${PIPELINE.map((s,i)=>`
               <div class="st${i<si?' done':i===si?' done cur':''}">
                 <div class="st-ico">${s.e}</div>
-                <div class="st-lbl">${s.l}</div>
+                <div class="st-lbl">${t(s.lk)}</div>
               </div>${i<PIPELINE.length-1?'<div class="st-line"></div>':''}`).join('')}
           </div>`}
         <div class="tr-items">
           ${parseItems(o.items_json).map(i=>`<span class="tr-item">${esc(i.name)} ×${i.qty}</span>`).join('')}
         </div>
-        <div class="tr-tot">Total: ${R(o.total)}</div>
+        <div class="tr-tot">${t('total_lbl_track')} ${R(o.total)}</div>
       </div>` : ''}
     <div id="tr-err" class="err-msg"></div>`;
 }
@@ -561,6 +667,7 @@ function go(view, extra = {}) {
 }
 
 function renderAll() {
+  document.documentElement.lang = S.lang === 'pt' ? 'pt-BR' : 'en';
   renderNav();
   const views = { home: viewHome, menu: viewMenu, cart: viewCart, checkout: viewCheckout, confirmed: viewConfirmed, track: viewTrack };
   document.getElementById('app').innerHTML = (views[S.view] || viewHome)();
@@ -575,7 +682,7 @@ function bindView() {
     S.q = e.target.value;
     const g = document.getElementById('mgrid');
     const items = S.menu.filter(i => !S.cat || i.category === S.cat).filter(i => !S.q || i.name.toLowerCase().includes(S.q.toLowerCase()));
-    if (g) g.innerHTML = items.length ? items.map(card).join('') : '<div class="empty">Nenhum item encontrado.</div>';
+    if (g) g.innerHTML = items.length ? items.map(card).join('') : `<div class="empty">${t('empty_items')}</div>`;
   });
 
   // Checkout form
@@ -589,7 +696,7 @@ function bindView() {
       e.preventDefault();
       const fd = new FormData(form);
       const btn = document.getElementById('place-btn');
-      btn.disabled = true; btn.textContent = 'Enviando…';
+      btn.disabled = true; btn.textContent = t('placing');
       try {
         const res = await post({
           action: 'order',
@@ -609,7 +716,7 @@ function bindView() {
         go('confirmed');
       } catch(err) {
         toast(err.message, 'err');
-        btn.disabled = false; btn.textContent = 'Confirmar Pedido';
+        btn.disabled = false; btn.textContent = t('place_order');
       }
     });
   }
@@ -619,7 +726,7 @@ function bindView() {
 async function doTrack(id) {
   clearInterval(pollTimer); pollTimer = null;
   const errEl = document.getElementById('tr-err');
-  if (errEl) errEl.textContent = 'Buscando…';
+  if (errEl) errEl.textContent = t('searching');
   try {
     const o = await get('order', { id });
     S.tracked = o;
@@ -632,7 +739,7 @@ async function doTrack(id) {
     }
   } catch {
     const e = document.getElementById('tr-err');
-    if (e) e.textContent = 'Pedido não encontrado.';
+    if (e) e.textContent = t('not_found');
   }
 }
 
@@ -659,9 +766,15 @@ document.addEventListener('click', async e => {
 
   else if (a === 'cat') { S.cat = el.dataset.cat; renderAll(); }
 
+  else if (a === 'setlang') {
+    S.lang = el.dataset.l;
+    localStorage.setItem('gpz_lang', S.lang);
+    renderAll();
+  }
+
   else if (a === 'copy') {
     navigator.clipboard?.writeText('PIZZA10').catch(() => {});
-    toast('Código PIZZA10 copiado! 🎉');
+    toast('PIZZA10 🎉');
   }
 
   else if (a === 'promo') {
@@ -670,7 +783,7 @@ document.addEventListener('click', async e => {
     try {
       const res = await post({ action: 'applyOffer', promo_code: code, subtotal: cartSub() });
       S.promoCode = code; S.promoDsc = res.discount;
-      renderAll(); toast('Cupom aplicado! 🎉');
+      renderAll(); toast('PIZZA10 🎉');
     } catch(err) { toast(err.message, 'err'); }
   }
 
@@ -701,6 +814,7 @@ async function init() {
       .forEach(r => { settings[r.key] = r.value; });
     S.settings = settings;
     S.isOpen = settings.is_open !== 'false' && settings.is_open !== false;
+    if (settings.currency) S.currency = settings.currency;
     renderAll();
   } catch(err) {
     console.error('Init:', err);
