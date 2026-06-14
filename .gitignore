@@ -21,3 +21,9 @@ node_modules/
 
 # Firebase CLI deploy cache
 flutter/.firebase/
+web/.firebase/
+
+# Expo generated native directories
+mobile/android/
+mobile/ios/
+mobile/.expo/
