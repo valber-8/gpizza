@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPizza</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #C62828; --red2: #B71C1C; --dark: #1E1E28;
+      --muted: #6B7280; --surface: #F6F6F6; --border: #E5E7EB;
+      --shadow: 0 2px 12px rgba(0,0,0,.07);
+      --r: 16px; --rsm: 10px; --rbtn: 28px; --max: 960px;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--surface); color: var(--dark); line-height: 1.5; }
+    a, button { cursor: pointer; }
+    img { display: block; max-width: 100%; }
+
+    /* ── Nav ── */
+    #nav { position: sticky; top: 0; background: #fff; border-bottom: 1px solid var(--border); z-index: 100; box-shadow: var(--shadow); }
+    .nav-inner { max-width: var(--max); margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 20px; }
+    .nav-logo { font-weight: 800; font-size: 1.1rem; color: var(--dark); text-decoration: none; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 18px; flex: 1; }
+    .nav-links a { color: var(--muted); font-size: .9rem; font-weight: 500; text-decoration: none; transition: color .15s; }
+    .nav-links a:hover, .nav-links a.act { color: var(--red); }
+    .nav-cart { background: var(--red); color: #fff; border: none; border-radius: var(--rbtn); padding: 8px 18px; font: 600 .9rem 'Inter',sans-serif; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background .15s; }
+    .nav-cart:hover { background: var(--red2); }
+    .badge { background: #fff; color: var(--red); border-radius: 50%; width: 20px; height: 20px; font-size: .72rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+    /* ── App ── */
+    #app { max-width: var(--max); margin: 0 auto; padding-bottom: 60px; }
+
+    /* ── Buttons ── */
+    .btn { border: none; border-radius: var(--rbtn); padding: 12px 28px; font: 600 .95rem 'Inter',sans-serif; transition: all .15s; }
+    .btn-p { background: var(--red); color: #fff; }
+    .btn-p:hover:not(:disabled) { background: var(--red2); }
+    .btn-p:disabled { opacity: .6; }
+    .btn-o { background: transparent; color: var(--red); border: 2px solid var(--red); }
+    .btn-o:hover { background: var(--red); color: #fff; }
+    .btn-s { background: var(--surface); color: var(--dark); border: 1px solid var(--border); font: 500 .9rem 'Inter',sans-serif; border-radius: var(--rbtn); padding: 10px 20px; white-space: nowrap; }
+    .btn-s:hover { background: var(--border); }
+    .btn-w { width: 100%; }
+    .btn-add { background: var(--red); color: #fff; border: none; border-radius: 20px; padding: 7px 14px; font: 600 .82rem 'Inter',sans-serif; }
+    .btn-add:hover { background: var(--red2); }
+
+    /* ── Inputs ── */
+    .inp { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: var(--rsm); font: .95rem 'Inter',sans-serif; background: #fff; color: var(--dark); outline: none; transition: border-color .15s; }
+    .inp:focus { border-color: var(--red); }
+    textarea.inp { min-height: 90px; resize: vertical; }
+
+    /* ── Hero ── */
+    .hero { display: flex; align-items: center; gap: 40px; padding: 60px 20px; min-height: 360px; }
+    .hero-text { flex: 1; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+    .hero p { color: var(--muted); margin-bottom: 28px; max-width: 420px; }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-emoji { font-size: 8rem; flex-shrink: 0; }
+    @media (max-width: 600px) { .hero { padding: 36px 20px; } .hero-emoji { display: none; } }
+
+    /* ── Section ── */
+    .sec { padding: 48px 20px; }
+    .sec-hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; }
+    .sec-hd h2, .sec h2 { font-size: 1.5rem; font-weight: 700; }
+    .sec-ctr { text-align: center; }
+    .lnk { color: var(--red); font-weight: 600; font-size: .9rem; }
+
+    /* ── Cards grid ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
+    .grid.pad { padding: 0 20px; }
+    .card { background: #fff; border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; transition: transform .15s, box-shadow .15s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .card.dim { opacity: .55; }
+    .card-img { height: 140px; background: var(--surface); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .card-emoji { font-size: 3.5rem; }
+    .card-tag { position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff; font-size: .7rem; font-weight: 600; padding: 3px 9px; border-radius: 6px; }
+    .card-body { padding: 14px; display: flex; flex-direction: column; flex: 1; }
+    .card-name { font-weight: 600; font-size: .95rem; margin-bottom: 6px; }
+    .card-desc { color: var(--muted); font-size: .8rem; flex: 1; line-height: 1.4; margin-bottom: 12px; }
+    .card-ft { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+    .card-price { font-weight: 700; font-size: 1.05rem; color: var(--red); }
+    .dim-txt { color: var(--muted); font-size: .82rem; }
+
+    /* ── Qty ── */
+    .qty { display: flex; align-items: center; gap: 8px; }
+    .qty-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--red); background: transparent; color: var(--red); font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: all .1s; }
+    .qty-btn:hover { background: var(--red); color: #fff; }
+
+    /* ── Cat tabs ── */
+    .tabs { display: flex; gap: 10px; padding: 16px 20px; overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { background: #fff; border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 18px; font: 500 .88rem 'Inter',sans-serif; white-space: nowrap; color: var(--dark); transition: all .15s; }
+    .tab.act { background: var(--red); color: #fff; border-color: var(--red); }
+    .tab:hover:not(.act) { border-color: var(--red); color: var(--red); }
+
+    /* ── Page header ── */
+    .ph { padding: 28px 20px 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .ph h1 { font-size: 1.6rem; font-weight: 700; }
+    .search { flex: 1; min-width: 160px; max-width: 300px; }
+
+    /* ── Promo banner ── */
+    .promo-bar { background: linear-gradient(135deg, var(--red) 0%, #E53935 100%); color: #fff; margin: 0 20px; border-radius: var(--r); padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .promo-bar strong { font-size: 1.05rem; }
+    .promo-bar p { font-size: .9rem; opacity: .9; margin-top: 4px; }
+    .btn-cp { background: rgba(255,255,255,.2); color: #fff; border: 1.5px solid rgba(255,255,255,.5); border-radius: var(--rbtn); padding: 10px 22px; font: 600 .9rem 'Inter',sans-serif; white-space: nowrap; }
+    .btn-cp:hover { background: rgba(255,255,255,.3); }
+
+    /* ── Features ── */
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .feat { background: #fff; border-radius: var(--r); padding: 24px; box-shadow: var(--shadow); }
+    .feat-ico { font-size: 2rem; display: block; margin-bottom: 12px; }
+    .feat strong { display: block; font-weight: 700; margin-bottom: 8px; }
+    .feat p { font-size: .85rem; color: var(--muted); }
+
+    /* ── Track CTA ── */
+    .track-cta { background: var(--dark); color: #fff; margin: 0 20px; border-radius: var(--r); padding: 40px 32px; text-align: center; }
+    .track-cta p { opacity: .7; margin: 8px 0 20px; }
+    .track-row { display: flex; gap: 10px; max-width: 480px; margin: 0 auto; }
+    .track-row .inp { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.2); color: #fff; flex: 1; }
+    .track-row .inp::placeholder { color: rgba(255,255,255,.45); }
+
+    /* ── Closed banner ── */
+    .closed { background: #FFF3E0; color: #E65100; text-align: center; padding: 12px 20px; font-weight: 600; }
+
+    /* ── Footer ── */
+    .foot { background: var(--dark); color: rgba(255,255,255,.8); padding: 40px 20px; margin-top: 40px; text-align: center; }
+    .foot strong { font-size: 1.15rem; color: #fff; }
+    .foot p { font-size: .85rem; opacity: .6; margin: 8px 0 16px; }
+    .foot-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 16px; }
+    .foot-links a { color: rgba(255,255,255,.6); font-size: .9rem; }
+    .foot-links a:hover { color: #fff; }
+    .foot small { font-size: .78rem; opacity: .4; }
+
+    /* ── Cart ── */
+    .cart-lay { display: grid; grid-template-columns: 1fr 340px; gap: 24px; padding: 20px; }
+    @media (max-width: 720px) { .cart-lay { grid-template-columns: 1fr; } }
+    .c-item { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: var(--rsm); padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow); }
+    .c-item-ico { font-size: 2rem; flex-shrink: 0; }
+    .c-item-info { flex: 1; }
+    .c-item-name { font-weight: 600; margin-bottom: 4px; }
+    .c-item-sub { font-size: .85rem; color: var(--muted); }
+    .c-side { display: flex; flex-direction: column; gap: 16px; }
+    .c-box { background: #fff; border-radius: var(--rsm); padding: 16px; box-shadow: var(--shadow); }
+    .c-box-title { font-weight: 600; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+    .promo-row { display: flex; gap: 8px; }
+    .promo-row .inp { flex: 1; }
+    .ok-tag { color: #2E7D32; font-size: .85rem; font-weight: 600; margin-top: 8px; }
+    .tot-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: .9rem; }
+    .tot-row.disc { color: #2E7D32; }
+    .tot-row.grand { font-weight: 700; font-size: 1.05rem; border-top: 1.5px solid var(--border); margin-top: 8px; padding-top: 12px; }
+    .empty-c { text-align: center; padding: 60px 20px; }
+    .empty-c .ei { font-size: 4rem; margin-bottom: 16px; }
+    .empty-c p { color: var(--muted); margin-bottom: 20px; }
+    .empty { grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted); }
+
+    /* ── Checkout ── */
+    .co-wrap { padding: 0 20px 20px; max-width: 560px; }
+    .co-form { display: flex; flex-direction: column; gap: 16px; }
+    .fg { display: flex; flex-direction: column; gap: 6px; }
+    .fg label { font-weight: 600; font-size: .9rem; }
+    .radios { display: flex; gap: 16px; flex-wrap: wrap; }
+    .rad { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+    .rad input { accent-color: var(--red); }
+    .summ { background: var(--surface); border-radius: var(--rsm); padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+    .s-row { display: flex; justify-content: space-between; font-size: .9rem; }
+    .s-row.disc { color: #2E7D32; }
+    .s-row.tot { font-weight: 700; border-top: 1.5px solid var(--border); margin-top: 6px; padding-top: 10px; font-size: 1rem; }
+
+    /* ── Confirmed ── */
+    .conf { text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .conf .ico { font-size: 4rem; }
+    .conf h1 { font-size: 1.8rem; font-weight: 700; }
+    .conf p { color: var(--muted); }
+    .info-card { background: #fff; border-radius: var(--r); padding: 20px 32px; box-shadow: var(--shadow); min-width: 280px; display: flex; flex-direction: column; gap: 10px; }
+    .i-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+    .i-row span { color: var(--muted); font-size: .9rem; }
+
+    /* ── Track ── */
+    .tr-search { display: flex; gap: 10px; padding: 0 20px 20px; }
+    .tr-search .inp { flex: 1; }
+    .tr-card { margin: 0 20px; background: #fff; border-radius: var(--r); padding: 24px; box-shadow: var(--shadow); }
+    .tr-id { font-size: .9rem; color: var(--muted); margin-bottom: 4px; }
+    .tr-who { font-weight: 600; margin-bottom: 20px; }
+    .pipeline { display: flex; align-items: center; overflow-x: auto; padding: 12px 0 20px; scrollbar-width: none; }
+    .pipeline::-webkit-scrollbar { display: none; }
+    .st { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; opacity: .3; }
+    .st.done { opacity: .6; }
+    .st.cur { opacity: 1; }
+    .st-ico { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 2px solid var(--border); }
+    .st.done .st-ico { border-color: var(--red); background: #FFEBEE; }
+    .st.cur .st-ico { border-color: var(--red); background: var(--red); font-size: 1.4rem; box-shadow: 0 0 0 4px rgba(198,40,40,.15); }
+    .st-lbl { font-size: .68rem; font-weight: 600; text-align: center; max-width: 58px; }
+    .st-line { flex: 1; height: 2px; background: var(--border); min-width: 16px; }
+    .tr-items { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 12px; }
+    .tr-item { background: var(--surface); border-radius: 20px; padding: 4px 12px; font-size: .82rem; }
+    .tr-tot { font-weight: 700; }
+    .cancelled { color: var(--red); font-weight: 600; padding: 12px 0; }
+
+    /* ── Toast ── */
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--dark); color: #fff; padding: 12px 24px; border-radius: 24px; font-size: .9rem; font-weight: 500; z-index: 200; transition: transform .25s; pointer-events: none; white-space: nowrap; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.err { background: var(--red); }
+
+    /* ── Misc ── */
+    .err-msg { padding: 12px 20px; color: var(--muted); font-size: .9rem; }
+    .spin { display: flex; justify-content: center; padding: 60px 0; color: var(--muted); }
+    .loader { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <nav id="nav"></nav>
+  <div id="app"><div class="spin"><div class="loader"></div></div></div>
+  <div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── Config ────────────────────────────────────────────────────────────────────
+const API = 'https://script.google.com/macros/s/AKfycbxAFzDejhZC-_vBtzIec7oMuI1KZ6rgDU96T6fyRfI3r20bZq2_eJQY0x6xOF2W_Kg7bQ/exec';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const S = {
+  view: 'home', menu: [], cart: [], settings: {},
+  cat: '', q: '',
+  promoCode: '', promoDsc: 0,
+  order: null,       // last placed order response
+  trackId: '',
+  tracked: null,
+  isOpen: true,
+};
+
+// ── API ────────────────────────────────────────────────────────────────────────
+async function get(action, p = {}) {
+  const u = new URL(API);
+  u.searchParams.set('action', action);
+  for (const [k, v] of Object.entries(p)) u.searchParams.set(k, v);
+  const r = await fetch(u);
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error || 'Erro na API');
+  return d.data;
+}
+
+async function post(body) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error || 'Erro na API');
+  return d.data;
+}
+
+// ── Cart ──────────────────────────────────────────────────────────────────────
+function cartLoad()    { try { return JSON.parse(localStorage.getItem('gpz') || '[]'); } catch { return []; } }
+function cartSave()    { localStorage.setItem('gpz', JSON.stringify(S.cart)); }
+function cartCount()   { return S.cart.reduce((s, i) => s + i.qty, 0); }
+function cartSub()     { return S.cart.reduce((s, i) => s + i.qty * i.price, 0); }
+function cartTotal()   { return Math.max(0, cartSub() - S.promoDsc); }
+function cartItem(id)  { return S.cart.find(i => i.id == id); }
+
+function cartAdd(item) {
+  const x = cartItem(item.id);
+  if (x) x.qty++; else S.cart.push({ ...item, qty: 1 });
+  cartSave();
+  toast(`${item.name} adicionado ✓`);
+  renderNav();
+}
+
+function cartDelta(id, d) {
+  const x = cartItem(id);
+  if (!x) return;
+  x.qty += d;
+  if (x.qty <= 0) S.cart = S.cart.filter(i => i.id != id);
+  cartSave();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const R    = (n) => 'R$' + Number(n).toFixed(2).replace('.', ',');
+const CAT  = { Pizzas: '🍕', Drinks: '🥤', Sides: '🥗', Desserts: '🍰' };
+const ico  = (c) => CAT[c] || '🍽';
+const esc  = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 2800);
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function renderNav() {
+  const n = cartCount();
+  document.getElementById('nav').innerHTML =
+    `<div class="nav-inner">
+      <a class="nav-logo" data-a="go" data-v="home">🍕 GPizza</a>
+      <div class="nav-links">
+        <a data-a="go" data-v="menu" class="${S.view==='menu'?'act':''}">Cardápio</a>
+        <a data-a="go" data-v="track" class="${S.view==='track'?'act':''}">Rastrear</a>
+      </div>
+      <button class="nav-cart" data-a="go" data-v="cart">
+        🛒 Carrinho${n?` <span class="badge">${n}</span>`:''}
+      </button>
+    </div>`;
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+function card(item) {
+  const c = cartItem(item.id), qty = c ? c.qty : 0;
+  const dim = item.available === false;
+  const src = item.image_drive_id
+    ? `<img src="https://drive.google.com/thumbnail?id=${item.image_drive_id}&sz=w400" alt="${esc(item.name)}" loading="lazy">`
+    : `<div class="card-emoji">${ico(item.category)}</div>`;
+  return `
+    <div class="card${dim?' dim':''}">
+      <div class="card-img">${src}${item.tag?`<span class="card-tag">${esc(item.tag)}</span>`:''}</div>
+      <div class="card-body">
+        <div class="card-name">${esc(item.name)}</div>
+        <div class="card-desc">${esc(item.description||'')}</div>
+        <div class="card-ft">
+          <span class="card-price">${R(item.price)}</span>
+          ${dim ? `<span class="dim-txt">Indisponível</span>`
+          : qty === 0
+            ? `<button class="btn-add" data-a="add" data-id="${item.id}">+ Adicionar</button>`
+            : `<div class="qty"><button class="qty-btn" data-a="dec" data-id="${item.id}">−</button><span>${qty}</span><button class="qty-btn" data-a="inc" data-id="${item.id}">+</button></div>`
+          }
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+function viewHome() {
+  const featured = S.menu.filter(i => i.available !== false).slice(0, 4);
+  return `
+    ${!S.isOpen ? `<div class="closed">🚫 Estamos fechados. Volte mais tarde!</div>` : ''}
+    <div class="hero">
+      <div class="hero-text">
+        <h1>Pizza Artesanal,<br>Entregue Rápido 🍕</h1>
+        <p>Ingredientes frescos, sabor inigualável. Pronto em 30 minutos ou o próximo pedido é por nossa conta.</p>
+        <div class="hero-btns">
+          <button class="btn btn-p" data-a="go" data-v="menu">Pedir Agora</button>
+          <button class="btn btn-o" data-a="go" data-v="menu">Ver Cardápio</button>
+        </div>
+      </div>
+      <div class="hero-emoji">🍕</div>
+    </div>
+
+    ${featured.length ? `
+    <section class="sec" style="padding-top:0">
+      <div class="sec-hd"><h2>Mais Pedidos</h2><a class="lnk" data-a="go" data-v="menu">Ver tudo →</a></div>
+      <div class="grid">${featured.map(card).join('')}</div>
+    </section>` : ''}
+
+    <div class="promo-bar">
+      <div><strong>🎉 Primeiro pedido?</strong><p>Use o código <strong>PIZZA10</strong> e ganhe 10% de desconto!</p></div>
+      <button class="btn-cp" data-a="copy">Copiar código</button>
+    </div>
+
+    <section class="sec sec-ctr">
+      <h2 style="margin-bottom:32px">Por que GPizza?</h2>
+      <div class="features">
+        <div class="feat"><span class="feat-ico">⚡</span><strong>Entrega em 30 min</strong><p>Garantimos 30 minutos ou a próxima pizza é por nossa conta.</p></div>
+        <div class="feat"><span class="feat-ico">🧀</span><strong>Ingredientes Frescos</strong><p>Produção local, ingredientes selecionados diariamente.</p></div>
+        <div class="feat"><span class="feat-ico">📱</span><strong>Pedido Fácil</strong><p>Escolha, peça e acompanhe em tempo real.</p></div>
+        <div class="feat"><span class="feat-ico">🎁</span><strong>Fidelidade</strong><p>1 ponto por R$1. 100 pontos = R$5 de desconto.</p></div>
+      </div>
+    </section>
+
+    <div class="track-cta sec">
+      <h2>Acompanhe seu pedido</h2>
+      <p>Saiba exatamente onde está sua pizza.</p>
+      <div class="track-row">
+        <input id="htrack" type="text" class="inp" placeholder="Número do pedido…">
+        <button class="btn btn-p" data-a="htrack">Rastrear</button>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <strong>🍕 GPizza</strong>
+      <p>Artesanal com amor, entregue com velocidade.</p>
+      <div class="foot-links">
+        <a data-a="go" data-v="menu">Cardápio</a>
+        <a data-a="go" data-v="track">Rastrear</a>
+      </div>
+      <small>© 2025 GPizza. Todos os direitos reservados.</small>
+    </footer>`;
+}
+
+// ── Menu ──────────────────────────────────────────────────────────────────────
+function viewMenu() {
+  const cats = [...new Set(S.menu.map(i => i.category).filter(Boolean))];
+  const items = S.menu
+    .filter(i => !S.cat || i.category === S.cat)
+    .filter(i => !S.q || i.name.toLowerCase().includes(S.q.toLowerCase()));
+  return `
+    <div class="ph">
+      <h1>Nosso Cardápio</h1>
+      <input id="srch" type="text" class="inp search" placeholder="🔍 Buscar…" value="${esc(S.q)}">
+    </div>
+    <div class="tabs">
+      <button class="tab${S.cat===''?' act':''}" data-a="cat" data-cat="">🍽 Todos</button>
+      ${cats.map(c=>`<button class="tab${S.cat===c?' act':''}" data-a="cat" data-cat="${esc(c)}">${ico(c)} ${esc(c)}</button>`).join('')}
+    </div>
+    <div class="grid pad" id="mgrid">
+      ${items.length ? items.map(card).join('') : '<div class="empty">Nenhum item encontrado.</div>'}
+    </div>`;
+}
+
+// ── Cart ──────────────────────────────────────────────────────────────────────
+function viewCart() {
+  if (!S.cart.length) return `
+    <div class="ph"><h1>Carrinho</h1></div>
+    <div class="empty-c">
+      <div class="ei">🛒</div>
+      <p>Seu carrinho está vazio.</p>
+      <button class="btn btn-p" data-a="go" data-v="menu">Ver Cardápio</button>
+    </div>`;
+
+  const sub = cartSub(), dsc = S.promoDsc, tot = cartTotal();
+  return `
+    <div class="ph"><h1>Carrinho</h1></div>
+    <div class="cart-lay">
+      <div>
+        ${S.cart.map(i=>`
+          <div class="c-item">
+            <div class="c-item-ico">${ico(i.category||'')}</div>
+            <div class="c-item-info">
+              <div class="c-item-name">${esc(i.name)}</div>
+              <div class="c-item-sub">${R(i.price)} × ${i.qty} = <strong>${R(i.price*i.qty)}</strong></div>
+            </div>
+            <div class="qty">
+              <button class="qty-btn" data-a="dec" data-id="${i.id}">−</button>
+              <span>${i.qty}</span>
+              <button class="qty-btn" data-a="inc" data-id="${i.id}">+</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="c-side">
+        <div class="c-box">
+          <div class="c-box-title">Cupom de desconto</div>
+          <div class="promo-row">
+            <input id="promo" type="text" class="inp" placeholder="Código…" value="${esc(S.promoCode)}">
+            <button class="btn-s" data-a="promo">Aplicar</button>
+          </div>
+          ${dsc>0?`<div class="ok-tag">✓ Desconto aplicado: −${R(dsc)}</div>`:''}
+        </div>
+        <div class="c-box">
+          <div class="tot-row"><span>Subtotal</span><span>${R(sub)}</span></div>
+          ${dsc>0?`<div class="tot-row disc"><span>Desconto</span><span>−${R(dsc)}</span></div>`:''}
+          <div class="tot-row grand"><span>Total</span><span>${R(tot)}</span></div>
+        </div>
+        <button class="btn btn-p btn-w" data-a="go" data-v="checkout">Finalizar Pedido →</button>
+        <button class="btn btn-o" data-a="go" data-v="menu">Continuar comprando</button>
+      </div>
+    </div>`;
+}
+
+// ── Checkout ──────────────────────────────────────────────────────────────────
+function viewCheckout() {
+  const sub = cartSub(), dsc = S.promoDsc, tot = cartTotal();
+  return `
+    <div class="ph"><h1>Finalizar Pedido</h1></div>
+    <div class="co-wrap">
+      <form id="coform" class="co-form">
+        <div class="fg"><label>Nome completo *</label><input name="name" type="text" class="inp" placeholder="Seu nome" required></div>
+        <div class="fg"><label>Telefone *</label><input name="phone" type="tel" class="inp" placeholder="+55 (11) 99999-9999" required></div>
+        <div class="fg">
+          <label>Tipo de entrega *</label>
+          <div class="radios">
+            <label class="rad"><input type="radio" name="type" value="delivery" checked> 🛵 Entrega</label>
+            <label class="rad"><input type="radio" name="type" value="pickup"> 🏪 Retirada</label>
+          </div>
+        </div>
+        <div class="fg" id="addr-g"><label>Endereço *</label><input name="address" type="text" class="inp" placeholder="Rua, número, bairro…"></div>
+        <div class="fg"><label>Observações</label><textarea name="notes" class="inp" placeholder="Ex: sem cebola, campainha quebrada…"></textarea></div>
+        <div class="summ">
+          ${S.cart.map(i=>`<div class="s-row"><span>${esc(i.name)} ×${i.qty}</span><span>${R(i.price*i.qty)}</span></div>`).join('')}
+          ${dsc>0?`<div class="s-row disc"><span>Desconto</span><span>−${R(dsc)}</span></div>`:''}
+          <div class="s-row tot"><span>Total</span><span>${R(tot)}</span></div>
+        </div>
+        <button type="submit" class="btn btn-p btn-w" id="place-btn">Confirmar Pedido</button>
+      </form>
+    </div>`;
+}
+
+// ── Confirmed ─────────────────────────────────────────────────────────────────
+function viewConfirmed() {
+  const o = S.order;
+  return `
+    <div class="conf">
+      <div class="ico">✅</div>
+      <h1>Pedido Confirmado!</h1>
+      <p>Seu pedido foi recebido e já está sendo preparado.</p>
+      ${o ? `
+        <div class="info-card">
+          <div class="i-row"><span>Número do pedido</span><strong>${esc(o.order_id||'')}</strong></div>
+          ${o.points_earned ? `<div class="i-row"><span>Pontos ganhos</span><strong>+${o.points_earned} pts 🎁</strong></div>` : ''}
+        </div>
+        <button class="btn btn-p" data-a="go" data-v="track" data-tid="${esc(o.order_id||'')}">Acompanhar Pedido →</button>
+      ` : ''}
+      <button class="btn btn-o" data-a="go" data-v="home">Voltar ao início</button>
+    </div>`;
+}
+
+// ── Track ─────────────────────────────────────────────────────────────────────
+const STEPS = [
+  { k: 'pending',          l: 'Recebido',   e: '📋' },
+  { k: 'received',         l: 'Recebido',   e: '📋' },
+  { k: 'preparing',        l: 'Preparando', e: '👨‍🍳' },
+  { k: 'baking',           l: 'No Forno',   e: '🔥' },
+  { k: 'ready',            l: 'Pronto',     e: '✅' },
+  { k: 'out_for_delivery', l: 'A Caminho',  e: '🛵' },
+  { k: 'completed',        l: 'Entregue',   e: '🎉' },
+];
+const PIPELINE = STEPS.filter(s => s.k !== 'pending');
+
+function viewTrack() {
+  const o = S.tracked;
+  let si = -1;
+  if (o) {
+    si = PIPELINE.findIndex(s => s.k === o.status);
+    if (si < 0 && o.status === 'pending') si = 0;
+  }
+  return `
+    <div class="ph"><h1>Rastrear Pedido</h1></div>
+    <div class="tr-search">
+      <input id="trid" type="text" class="inp" placeholder="Número do pedido…" value="${esc(S.trackId||'')}">
+      <button class="btn btn-p" data-a="dotrack">Buscar</button>
+    </div>
+    ${o ? `
+      <div class="tr-card">
+        <div class="tr-id">Pedido <strong>${esc(o.order_id)}</strong></div>
+        <div class="tr-who">${esc(o.customer_name)} · ${o.order_type==='pickup'?'🏪 Retirada':'🛵 Entrega'}</div>
+        ${o.status==='cancelled' ? `<div class="cancelled">❌ Pedido cancelado</div>` : `
+          <div class="pipeline">
+            ${PIPELINE.map((s,i)=>`
+              <div class="st${i<si?' done':i===si?' done cur':''}">
+                <div class="st-ico">${s.e}</div>
+                <div class="st-lbl">${s.l}</div>
+              </div>${i<PIPELINE.length-1?'<div class="st-line"></div>':''}`).join('')}
+          </div>`}
+        <div class="tr-items">
+          ${(()=>{try{return JSON.parse(o.items_json||'[]')}catch{return []}}())
+            .map(i=>`<span class="tr-item">${esc(i.name)} ×${i.qty}</span>`).join('')}
+        </div>
+        <div class="tr-tot">Total: ${R(o.total)}</div>
+      </div>` : ''}
+    <div id="tr-err" class="err-msg"></div>`;
+}
+
+// ── Router ────────────────────────────────────────────────────────────────────
+let pollTimer = null;
+
+function go(view, extra = {}) {
+  if (view !== 'track') { clearInterval(pollTimer); pollTimer = null; }
+  Object.assign(S, extra);
+  S.view = view;
+  window.scrollTo(0, 0);
+  renderAll();
+}
+
+function renderAll() {
+  renderNav();
+  const views = { home: viewHome, menu: viewMenu, cart: viewCart, checkout: viewCheckout, confirmed: viewConfirmed, track: viewTrack };
+  document.getElementById('app').innerHTML = (views[S.view] || viewHome)();
+  bindView();
+}
+
+// ── View-specific bindings ────────────────────────────────────────────────────
+function bindView() {
+  // Search input (menu page)
+  const srch = document.getElementById('srch');
+  if (srch) srch.addEventListener('input', e => {
+    S.q = e.target.value;
+    const g = document.getElementById('mgrid');
+    const items = S.menu.filter(i => !S.cat || i.category === S.cat).filter(i => !S.q || i.name.toLowerCase().includes(S.q.toLowerCase()));
+    if (g) g.innerHTML = items.length ? items.map(card).join('') : '<div class="empty">Nenhum item encontrado.</div>';
+  });
+
+  // Checkout form
+  const form = document.getElementById('coform');
+  if (form) {
+    form.querySelector('[name="type"]')?.closest('.radios')?.addEventListener('change', e => {
+      const ag = document.getElementById('addr-g');
+      if (ag) ag.style.display = e.target.value === 'pickup' ? 'none' : '';
+    });
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const btn = document.getElementById('place-btn');
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      try {
+        const res = await post({
+          action: 'order',
+          customer_name: fd.get('name'),
+          phone: fd.get('phone'),
+          order_type: fd.get('type'),
+          delivery_address: fd.get('address') || '',
+          notes: fd.get('notes') || '',
+          items: S.cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, unit_price: i.price })),
+          subtotal: cartSub(),
+          discount: S.promoDsc,
+          offer_code: S.promoCode || '',
+          total: cartTotal(),
+        });
+        S.cart = []; S.promoCode = ''; S.promoDsc = 0; cartSave();
+        S.order = res;
+        go('confirmed');
+      } catch(err) {
+        toast(err.message, 'err');
+        btn.disabled = false; btn.textContent = 'Confirmar Pedido';
+      }
+    });
+  }
+}
+
+// ── Track logic ───────────────────────────────────────────────────────────────
+async function doTrack(id) {
+  clearInterval(pollTimer); pollTimer = null;
+  const errEl = document.getElementById('tr-err');
+  if (errEl) errEl.textContent = 'Buscando…';
+  try {
+    const o = await get('order', { id });
+    S.tracked = o;
+    if (S.view === 'track') {
+      renderAll();
+      const terminal = ['completed', 'cancelled'];
+      if (!terminal.includes(o.status)) {
+        pollTimer = setInterval(() => doTrack(id), 30000);
+      }
+    }
+  } catch {
+    const e = document.getElementById('tr-err');
+    if (e) e.textContent = 'Pedido não encontrado.';
+  }
+}
+
+// ── Global click delegation ───────────────────────────────────────────────────
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-a]');
+  if (!el) return;
+  const a = el.dataset.a;
+
+  if (a === 'go') {
+    const extra = {};
+    if (el.dataset.tid !== undefined) { extra.trackId = el.dataset.tid; extra.tracked = null; }
+    go(el.dataset.v, extra);
+    if (el.dataset.v === 'track' && el.dataset.tid) setTimeout(() => doTrack(el.dataset.tid), 50);
+  }
+
+  else if (a === 'add') {
+    const item = S.menu.find(i => String(i.id) === el.dataset.id);
+    if (item) { cartAdd({ id: item.id, name: item.name, price: item.price, category: item.category, image_drive_id: item.image_drive_id }); renderAll(); }
+  }
+
+  else if (a === 'inc') { cartDelta(el.dataset.id, 1); renderAll(); }
+  else if (a === 'dec') { cartDelta(el.dataset.id, -1); renderAll(); }
+
+  else if (a === 'cat') { S.cat = el.dataset.cat; renderAll(); }
+
+  else if (a === 'copy') {
+    navigator.clipboard?.writeText('PIZZA10').catch(() => {});
+    toast('Código PIZZA10 copiado! 🎉');
+  }
+
+  else if (a === 'promo') {
+    const code = document.getElementById('promo')?.value?.trim().toUpperCase();
+    if (!code) return;
+    try {
+      const res = await post({ action: 'applyOffer', promo_code: code, subtotal: cartSub() });
+      S.promoCode = code; S.promoDsc = res.discount;
+      renderAll(); toast('Cupom aplicado! 🎉');
+    } catch(err) { toast(err.message, 'err'); }
+  }
+
+  else if (a === 'htrack') {
+    const id = document.getElementById('htrack')?.value?.trim();
+    if (!id) return;
+    go('track', { trackId: id, tracked: null });
+    setTimeout(() => doTrack(id), 50);
+  }
+
+  else if (a === 'dotrack') {
+    const id = document.getElementById('trid')?.value?.trim();
+    if (!id) return;
+    S.trackId = id; S.tracked = null;
+    doTrack(id);
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  S.cart = cartLoad();
+  renderAll();
+  try {
+    const [md, sd] = await Promise.all([get('menu'), get('settings')]);
+    S.menu = Array.isArray(md) ? md : (md.items || []);
+    const settings = {};
+    (Array.isArray(sd) ? sd : Object.entries(sd).map(([k,v])=>({key:k,value:v})))
+      .forEach(r => { settings[r.key] = r.value; });
+    S.settings = settings;
+    S.isOpen = settings.is_open !== 'false' && settings.is_open !== false;
+    renderAll();
+  } catch(err) {
+    console.error('Init:', err);
+    renderAll();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
