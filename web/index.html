@@ -320,7 +320,7 @@ const I18N = {
 };
 function t(k) {
   const str = (I18N[S.lang] || I18N.se)[k] || k;
-  return str.replace(/{c}/g, S.currency || 'R$');
+  return str.replace(/{c}/g, S.currency || 'kr');
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -332,7 +332,7 @@ const S = {
   trackId: '', tracked: null,
   isOpen: true,
   lang: localStorage.getItem('gpz_lang') || 'se',
-  currency: 'R$',
+  currency: 'kr',
 };
 
 // ── API ────────────────────────────────────────────────────────────────────────
@@ -381,7 +381,7 @@ function cartDelta(id, d) {
 function parseItems(json) { try { return JSON.parse(json || '[]'); } catch(e) { return []; } }
 function R(n) {
   const num = Number(n).toFixed(2);
-  const sym = S.currency || 'R$';
+  const sym = S.currency || 'kr';
   return S.lang !== 'en' ? sym + num.replace('.', ',') : sym + num;
 }
 const CAT  = { Pizzas: '🍕', Drinks: '🥤', Sides: '🥗', Desserts: '🍰', Food: '🍽' };
